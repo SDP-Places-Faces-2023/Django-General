@@ -1,5 +1,5 @@
 Starting server:
-<h1>python manage.py runserver 9000</h1>
+python manage.py runserver 9000
 
 Connect PostgreSQL to Django
 
