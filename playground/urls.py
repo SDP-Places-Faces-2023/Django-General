@@ -4,7 +4,8 @@ from . import views
 urlpatterns = [
     path('hello/', views.say_hello),
     path('fff/', views.get_data_from_fastapi),
-    path('objectdetection/', views.get_object_detection, name='get_object_detection_results'),
-    path('objectclassification/', views.get_object_classification, name='get_object_detection_asdfasdf')
+    path('object-detection/', views.get_object_detection),
+    path('object-classification/', views.get_object_classification),
+    path('face-recognition/', views.get_face_recognition)
 
 ]

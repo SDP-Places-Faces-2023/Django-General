@@ -50,3 +50,15 @@ def get_object_classification(request):
             return JsonResponse({'error': 'Failed to retrieve data from FastAPI'}, status=500)
     return JsonResponse({'error': 'Invalid request method'}, status=400)
 
+@csrf_exempt
+def get_face_recognition(request):
+    if request.method == 'POST':
+        url = 'http://127.0.0.1:8000/predict/'
+        files = {'file': request.FILES['file'].read()}
+        response = requests.post(url, files=files)
+        if response.status_code == 200:
+            data = response.json()
+            return JsonResponse(data)
+        else:
+            return JsonResponse({'error': 'Failed to retrieve data from FastAPI'}, status=500)
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
