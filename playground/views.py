@@ -53,14 +53,15 @@ def get_object_classification(request):
 @csrf_exempt
 def frame_post(request):
     if request.method == 'POST':
-        url = 'http://127.0.0.1:8000/predict/'
+        url = 'http://127.0.0.1:8000/detect_faces/'
         files = {'file': request.FILES['file'].read()}
         response = requests.post(url, files=files)
         #Get face coordinates, crop the face, send face to recognition API, return Employee ID
 
         if response.status_code == 200:
             data = response.json()
-            return JsonResponse(data)
+            print(data)
+            return JsonResponse(data, safe=False)
         else:
             return JsonResponse({'error': 'Failed to retrieve data from FastAPI'}, status=500)
     return JsonResponse({'error': 'Invalid request method'}, status=400)
