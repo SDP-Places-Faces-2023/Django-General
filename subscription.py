@@ -10,6 +10,9 @@ def subscription_loop():
     try:
         while True:
             ret, frame = cap.read()
+
+            cv2.waitKey(1)
+            cv2.imshow("negro", frame)
             if not ret:
                 continue
 
@@ -24,7 +27,7 @@ def subscription_loop():
                 print(f"Failed to retrieve data from face detection API. Status code: {response.status_code}")
 
             # Control the rate at which frames are captured and sent to the API
-            time.sleep(0.02)
+            time.sleep(0.05)
 
     finally:
         # Release the camera and destroy the window
