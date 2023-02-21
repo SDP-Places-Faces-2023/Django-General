@@ -11,8 +11,8 @@ def subscription_loop():
         while True:
             ret, frame = cap.read()
 
-            cv2.waitKey(1)
-            cv2.imshow("negro", frame)
+            # cv2.waitKey(1)
+            # cv2.imshow("current_frame", frame)
             if not ret:
                 continue
 
