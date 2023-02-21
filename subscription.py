@@ -24,7 +24,7 @@ def subscription_loop():
                 data = response.json()
                 print(data)
             else:
-                print(f"Failed to retrieve data from face detection API. Status code: {response.status_code}")
+                print(f"Failed to retrieve data from Django: {response.status_code}")
 
             # Control the rate at which frames are captured and sent to the API
             time.sleep(0.05)
