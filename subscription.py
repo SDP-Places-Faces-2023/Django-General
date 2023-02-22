@@ -11,8 +11,8 @@ def subscription_loop():
         while True:
             ret, frame = cap.read()
 
-            # cv2.waitKey(1)
-            # cv2.imshow("current_frame", frame)
+            cv2.waitKey(1)
+            cv2.imshow("current_frame", frame)
             if not ret:
                 continue
 
@@ -21,8 +21,7 @@ def subscription_loop():
             # Send a POST request to the face detection API with the frame data
             response = requests.post(url, files={"file": data})
             if response.status_code == 200:
-                data = response.json()
-                print(data)
+                print("Frame sent successfully")
             else:
                 print(f"Failed to retrieve data from Django: {response.status_code}")
 
