@@ -54,10 +54,10 @@ def get_object_classification(request):
 def frame_post(request):
     if request.method == 'POST':
         url = 'http://127.0.0.1:8000/detect_faces/'
-        url_face = 'http://127.0.0.1:8000/predict/'
+        # url_face = 'http://127.0.0.1:8000/predict/'
+        url_face = 'http://127.0.0.1:8000/recognize_faces/'
         files = {'file': request.FILES['file'].read()}
         response = requests.post(url, files=files)
-        # Get face coordinates, crop the face, send face to recognition API, return Employee ID
 
         if response.status_code == 200:
             data = response.json()
