@@ -5,7 +5,7 @@ import requests
 
 def subscription_loop():
     cap = cv2.VideoCapture(0)
-    url = 'http://127.0.0.1:9000/model_api_connection/frame-post/'
+    url = 'http://127.0.0.1:9000/model_api_connection/frame_post/'
 
     try:
         while True:

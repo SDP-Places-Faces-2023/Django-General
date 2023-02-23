@@ -7,6 +7,6 @@ urlpatterns = [
     # path('object-detection/', views.get_object_detection),
     # path('object-classification/', views.get_object_classification),
     # path('face-recognition/', views.get_face_recognition),
-    path('frame-post/', views.frame_post)
+    path('frame_post/', views.frame_post)
 
 ]

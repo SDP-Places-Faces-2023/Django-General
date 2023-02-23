@@ -6,6 +6,7 @@ import cv2
 import requests
 import time
 
+
 # These views are not necessary for now
 #
 # async def get_data(request):
@@ -55,7 +56,9 @@ import time
 def frame_post(request):
     if request.method == 'POST':
         url = 'http://127.0.0.1:8000/detect_faces/'
+        # The url of the CNN model
         # url_face = 'http://127.0.0.1:8000/predict/'
+        # The url of the LBPH model
         url_face = 'http://127.0.0.1:8000/recognize_faces/'
         files = {'file': request.FILES['file'].read()}
         response = requests.post(url, files=files)
