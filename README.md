@@ -1,6 +1,9 @@
 # ADA University
 # Employee Registration Image Recognition
 
+General application for the system is located here.
+
+
 Starting server:
 python manage.py runserver 9000
 
