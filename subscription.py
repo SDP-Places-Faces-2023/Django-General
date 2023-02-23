@@ -10,7 +10,6 @@ def subscription_loop():
     try:
         while True:
             ret, frame = cap.read()
-
             cv2.waitKey(1)
             cv2.imshow("current_frame", frame)
             if not ret:
@@ -20,6 +19,7 @@ def subscription_loop():
             data = cv2.imencode('.jpg', frame)[1].tobytes()
             # Send a POST request to the face detection API with the frame data
             response = requests.post(url, files={"file": data})
+
             if response.status_code == 200:
                 print("Frame sent successfully")
             else:
