@@ -1,3 +1,5 @@
+import uuid
+
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 import requests
@@ -87,8 +89,23 @@ def add_employee(request):
         fathers_name = request.POST['fathers_name']
         department = request.POST['department']
         pincode = request.POST['pincode']
-        employee = Employee(name=name, surname=surname, fathers_name=fathers_name, department=department, pincode=pincode)
+        employee = Employee(name=name, surname=surname, fathers_name=fathers_name, department=department,
+                            pincode=pincode)
         employee.save()
         return JsonResponse({'success': True})
     else:
         return JsonResponse({'success': False})
+
+
+@csrf_exempt
+def delete_employee(request):
+    if request.method == 'POST':
+        emp_id = request.POST.get('id')
+        try:
+            employee = Employee.objects.get(id=str(emp_id))
+            employee.delete()
+            return JsonResponse({'success': True, 'deleted': emp_id})
+        except (Employee.DoesNotExist, ValueError, TypeError):
+            return JsonResponse({'success': False, 'error': 'Employee does not exist'})
+    else:
+        return JsonResponse({'success': False, 'error': 'Invalid request method'})

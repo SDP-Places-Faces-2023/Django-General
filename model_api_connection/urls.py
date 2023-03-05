@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from .views import add_employee
+from .views import add_employee, delete_employee
 
 urlpatterns = [
     # path('hello/', views.say_hello),
@@ -10,4 +10,5 @@ urlpatterns = [
     # path('face-recognition/', views.get_face_recognition),
     path('frame_post/', views.frame_post, name='frame_post'),
     path('add_employee/', add_employee, name='add_employee'),
+    path('delete_employee/', delete_employee, name='delete_employee'),
 ]
