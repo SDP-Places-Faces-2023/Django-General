@@ -6,6 +6,8 @@ import cv2
 import requests
 import time
 
+from model_api_connection.models import Employee
+
 
 # These views are not necessary for now
 #
@@ -75,3 +77,18 @@ def frame_post(request):
         else:
             return JsonResponse({'error': 'Failed to retrieve data from FastAPI'}, status=500)
     return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+
+@csrf_exempt
+def add_employee(request):
+    if request.method == 'POST':
+        name = request.POST['name']
+        surname = request.POST['surname']
+        fathers_name = request.POST['fathers_name']
+        department = request.POST['department']
+        pincode = request.POST['pincode']
+        employee = Employee(name=name, surname=surname, fathers_name=fathers_name, department=department, pincode=pincode)
+        employee.save()
+        return JsonResponse({'success': True})
+    else:
+        return JsonResponse({'success': False})
