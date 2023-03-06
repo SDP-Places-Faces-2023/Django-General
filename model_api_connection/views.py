@@ -109,3 +109,28 @@ def delete_employee(request):
             return JsonResponse({'success': False, 'error': 'Employee does not exist'})
     else:
         return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+
+@csrf_exempt
+def upload_images_view(request):
+    # Get the ID from the request parameters
+    id = request.GET.get('id')
+
+    # Get the images from the request body
+    images = request.FILES.getlist('images')
+
+    # Build the request URL
+    url = 'http://localhost:8000/upload_images/?id=' + id
+    # Build the request data
+    data = []
+    for image in images:
+        data.append(('images', (image.name, image.file.read(), image.content_type)))
+
+    # Send the request
+    response = requests.post(url, files=data)
+
+    # Check if the request was successful
+    if response.status_code == 200:
+        return JsonResponse({'success': True, 'added images to': id})
+    else:
+        return JsonResponse({'success': False})
