@@ -121,6 +121,7 @@ def upload_images_view(request):
 
     # Build the request URL
     url = 'http://localhost:8000/upload_images/?id=' + id
+
     # Build the request data
     data = []
     for image in images:
@@ -129,7 +130,6 @@ def upload_images_view(request):
     # Send the request
     response = requests.post(url, files=data)
 
-    # Check if the request was successful
     if response.status_code == 200:
         return JsonResponse({'success': True, 'added images to': id})
     else:
