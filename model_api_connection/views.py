@@ -112,7 +112,7 @@ def delete_employee(request):
 
 
 @csrf_exempt
-def upload_images_view(request):
+def upload_images(request):
     # Get the ID from the request parameters
     pincode = request.GET.get('pincode')
     employee = Employee.objects.get(pincode=pincode)
@@ -133,6 +133,25 @@ def upload_images_view(request):
     response = requests.post(url, files=data)
 
     if response.status_code == 200:
-        return JsonResponse({'success': True, 'added images to': id})
+        return JsonResponse({'success': True, 'added images to': employee_id})
+    else:
+        return JsonResponse({'success': False})
+
+
+@csrf_exempt
+def delete_images(request):
+    # Get the ID from the request parameters
+    pincode = request.GET.get('pincode')
+    employee = Employee.objects.get(pincode=pincode)
+
+    employee_id = employee.id
+
+    # Build the request URL
+    url = 'http://localhost:8000/delete_images/?id=' + str(employee_id)
+
+    response = requests.post(url)
+
+    if response.status_code == 200:
+        return JsonResponse({'success': True, 'deleted images of': employee_id})
     else:
         return JsonResponse({'success': False})

@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from .views import add_employee, delete_employee, upload_images_view
+from .views import add_employee, delete_employee, upload_images, delete_images
 
 urlpatterns = [
     # path('hello/', views.say_hello),
@@ -11,6 +11,7 @@ urlpatterns = [
     path('frame_post/', views.frame_post, name='frame_post'),
     path('add_employee/', add_employee, name='add_employee'),
     path('delete_employee/', delete_employee, name='delete_employee'),
-    path('upload_images/', upload_images_view, name='upload_images'),
+    path('upload_images/', upload_images, name='upload_images'),
+    path('delete_images/', delete_images, name='delete_images'),
 
 ]
