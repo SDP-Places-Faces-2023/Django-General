@@ -100,11 +100,11 @@ def add_employee(request):
 @csrf_exempt
 def delete_employee(request):
     if request.method == 'POST':
-        emp_id = request.POST.get('id')
+        pincode = request.POST.get('pincode')
         try:
-            employee = Employee.objects.get(id=str(emp_id))
+            employee = Employee.objects.get(pincode=pincode)
             employee.delete()
-            return JsonResponse({'success': True, 'deleted': emp_id})
+            return JsonResponse({'success': True, 'deleted': pincode})
         except (Employee.DoesNotExist, ValueError, TypeError):
             return JsonResponse({'success': False, 'error': 'Employee does not exist'})
     else:
@@ -114,13 +114,15 @@ def delete_employee(request):
 @csrf_exempt
 def upload_images_view(request):
     # Get the ID from the request parameters
-    id = request.GET.get('id')
+    pincode = request.GET.get('pincode')
+    employee = Employee.objects.get(pincode=pincode)
 
+    employee_id = employee.id
     # Get the images from the request body
     images = request.FILES.getlist('images')
 
     # Build the request URL
-    url = 'http://localhost:8000/upload_images/?id=' + id
+    url = 'http://localhost:8000/upload_images/?id=' + str(employee_id)
 
     # Build the request data
     data = []
