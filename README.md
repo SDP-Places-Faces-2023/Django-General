@@ -18,6 +18,7 @@ Then, run the ```subscription.py```
 
 To create needed table in PostgreSQL:
 
+``` 
 CREATE TABLE model_api_connection_employee (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(50) NOT NULL,
@@ -26,3 +27,4 @@ CREATE TABLE model_api_connection_employee (
     pincode VARCHAR(10) UNIQUE NOT NULL,
     department VARCHAR(50) NOT NULL
 );
+```
