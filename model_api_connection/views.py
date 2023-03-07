@@ -142,16 +142,21 @@ def upload_images(request):
 def delete_images(request):
     # Get the ID from the request parameters
     pincode = request.GET.get('pincode')
-    employee = Employee.objects.get(pincode=pincode)
+    try:
 
-    employee_id = employee.id
+        employee = Employee.objects.get(pincode=pincode)
 
-    # Build the request URL
-    url = 'http://localhost:8000/delete_images/?id=' + str(employee_id)
+        employee_id = employee.id
 
-    response = requests.post(url)
+        # Build the request URL
+        url = 'http://localhost:8000/delete_images/?id=' + str(employee_id)
 
-    if response.status_code == 200:
-        return JsonResponse({'success': True, 'deleted images of': employee_id})
-    else:
-        return JsonResponse({'success': False})
+        response = requests.post(url)
+
+        if response.status_code == 200:
+            return JsonResponse({'success': True, 'deleted images of': employee_id})
+        else:
+            return JsonResponse({'success': False})
+    except:
+        print("Negro")
+        return JsonResponse({'error': 'Could not find matching employee'})
