@@ -1,3 +1,5 @@
+import uuid
+
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 import requests
@@ -5,6 +7,8 @@ from django.views.decorators.csrf import csrf_exempt
 import cv2
 import requests
 import time
+
+from model_api_connection.models import Employee
 
 
 # These views are not necessary for now
@@ -75,3 +79,84 @@ def frame_post(request):
         else:
             return JsonResponse({'error': 'Failed to retrieve data from FastAPI'}, status=500)
     return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+
+@csrf_exempt
+def add_employee(request):
+    if request.method == 'POST':
+        name = request.POST['name']
+        surname = request.POST['surname']
+        fathers_name = request.POST['fathers_name']
+        department = request.POST['department']
+        pincode = request.POST['pincode']
+        employee = Employee(name=name, surname=surname, fathers_name=fathers_name, department=department,
+                            pincode=pincode)
+        employee.save()
+        return JsonResponse({'success': True})
+    else:
+        return JsonResponse({'success': False})
+
+
+@csrf_exempt
+def delete_employee(request):
+    if request.method == 'POST':
+        pincode = request.POST.get('pincode')
+        try:
+            employee = Employee.objects.get(pincode=pincode)
+            employee.delete()
+            return JsonResponse({'success': True, 'deleted': pincode})
+        except (Employee.DoesNotExist, ValueError, TypeError):
+            return JsonResponse({'success': False, 'error': 'Employee does not exist'})
+    else:
+        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+
+@csrf_exempt
+def upload_images(request):
+    # Get the ID from the request parameters
+    pincode = request.GET.get('pincode')
+    employee = Employee.objects.get(pincode=pincode)
+
+    employee_id = employee.id
+    # Get the images from the request body
+    images = request.FILES.getlist('images')
+
+    # Build the request URL
+    url = 'http://localhost:8000/upload_images/?id=' + str(employee_id)
+
+    # Build the request data
+    data = []
+    for image in images:
+        data.append(('images', (image.name, image.file.read(), image.content_type)))
+
+    # Send the request
+    response = requests.post(url, files=data)
+
+    if response.status_code == 200:
+        return JsonResponse({'success': True, 'added images to': employee_id})
+    else:
+        return JsonResponse({'success': False})
+
+
+@csrf_exempt
+def delete_images(request):
+    # Get the ID from the request parameters
+    pincode = request.GET.get('pincode')
+    try:
+
+        employee = Employee.objects.get(pincode=pincode)
+
+        employee_id = employee.id
+
+        # Build the request URL
+        url = 'http://localhost:8000/delete_images/?id=' + str(employee_id)
+
+        response = requests.post(url)
+
+        if response.status_code == 200:
+            return JsonResponse({'success': True, 'deleted images of': employee_id})
+        else:
+            return JsonResponse({'success': False})
+    except:
+        print("Negro")
+        return JsonResponse({'error': 'Could not find matching employee'})
