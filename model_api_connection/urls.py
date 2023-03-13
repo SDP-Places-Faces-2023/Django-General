@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from .views import add_employee, delete_employee, upload_images, delete_images
+from .views import add_employee, delete_employee, upload_images, delete_images, record_attendance
 
 urlpatterns = [
     # path('hello/', views.say_hello),
@@ -13,5 +13,6 @@ urlpatterns = [
     path('delete_employee/', delete_employee, name='delete_employee'),
     path('upload_images/', upload_images, name='upload_images'),
     path('delete_images/', delete_images, name='delete_images'),
+    path('record_attendance/', record_attendance, name='record_attendance'),
 
 ]

@@ -1,14 +1,15 @@
 import uuid
 
+import pytz
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 import requests
 from django.views.decorators.csrf import csrf_exempt
 import cv2
 import requests
-import time
+from django.utils import timezone
 
-from model_api_connection.models import Employee
+from model_api_connection.models import Employee, Attendance
 
 
 # These views are not necessary for now
@@ -61,9 +62,9 @@ def frame_post(request):
     if request.method == 'POST':
         url = 'http://127.0.0.1:8000/detect_faces/'
         # The url of the CNN model
-        # url_face = 'http://127.0.0.1:8000/predict/'
+        url_face = 'http://127.0.0.1:8000/predict/'
         # The url of the LBPH model
-        url_face = 'http://127.0.0.1:8000/recognize_faces/'
+        # url_face = 'http://127.0.0.1:8000/recognize_faces/'
         files = {'file': request.FILES['file'].read()}
         response = requests.post(url, files=files)
 
@@ -158,5 +159,60 @@ def delete_images(request):
         else:
             return JsonResponse({'success': False})
     except:
-        print("Negro")
         return JsonResponse({'error': 'Could not find matching employee'})
+
+
+# @csrf_exempt
+# def record_attendance(request):
+#     if request.method == 'POST':
+#         employee_id = request.POST.get('employee_id')
+#         if not employee_id:
+#             return JsonResponse({'success': False, 'error': 'Employee ID is missing'})
+#
+#         # Check if the employee exists
+#         try:
+#             employee = Employee.objects.get(id=employee_id)
+#         except Employee.DoesNotExist:
+#             return JsonResponse({'success': False, 'error': 'Employee does not exist'})
+#
+#         # Get the current date and time
+#         now = timezone.now()
+#
+#         # Save the attendance record to the database
+#         attendance_record = Attendance(employee=employee, date=now.date())
+#         attendance_record.save()
+#
+#         return JsonResponse({'success': True, 'employee_id': employee_id, 'date': now.date()})
+#     else:
+#         return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+@csrf_exempt
+def record_attendance(request):
+    if request.method == 'POST':
+        employee_id = request.POST.get('employee_id')
+        if not employee_id:
+            return JsonResponse({'success': False, 'error': 'Employee ID is missing'})
+
+        # Check if the employee exists
+        try:
+            employee = Employee.objects.get(id=employee_id)
+        except Employee.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Employee does not exist'})
+
+        # Get the current date and time
+        now = timezone.now()
+
+        # Check if an attendance record already exists for this employee and date
+        existing_attendance_records = Attendance.objects.filter(employee=employee)
+        for record in existing_attendance_records:
+            if record.date.date() == now.date():
+                return JsonResponse({'success': False, 'error': 'Attendance already recorded for this employee today'})
+
+        # Save the attendance record to the database
+        attendance_record = Attendance(employee=employee, date=now.date())
+        attendance_record.save()
+
+        return JsonResponse({'success': True, 'employee_id': employee_id, 'date': now.date()})
+    else:
+        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
