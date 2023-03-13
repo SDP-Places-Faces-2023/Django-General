@@ -215,3 +215,4 @@ def record_attendance(request):
         return JsonResponse({'success': True, 'employee_id': employee_id, 'date': now.date()})
     else:
         return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
