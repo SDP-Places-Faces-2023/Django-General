@@ -1,6 +1,7 @@
 import uuid
 
 import pytz
+from django.core import serializers
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 import requests
@@ -97,6 +98,11 @@ def add_employee(request):
     else:
         return JsonResponse({'success': False})
 
+
+def list_employees(request):
+    employees = Employee.objects.all()
+    data = serializers.serialize('json', employees)
+    return JsonResponse({'employees': data})
 
 @csrf_exempt
 def delete_employee(request):
