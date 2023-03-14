@@ -126,6 +126,34 @@ def delete_employee(request):
 
 
 @csrf_exempt
+def edit_employee(request):
+    try:
+        employee_id=request.POST['employee_id']
+        employee = Employee.objects.get(id=employee_id)
+    except Employee.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Employee not found'})
+
+    if request.method == 'POST':
+        name = request.POST['name']
+        surname = request.POST['surname']
+        fathers_name = request.POST['fathers_name']
+        department = request.POST['department']
+        pincode = request.POST['pincode']
+
+        employee.name = name
+        employee.surname = surname
+        employee.fathers_name = fathers_name
+        employee.department = department
+        employee.pincode = pincode
+        employee.save()
+
+        return JsonResponse({'success': True})
+    else:
+        data = serializers.serialize('json', [employee, ])
+        return JsonResponse({'employee': data})
+
+
+@csrf_exempt
 def upload_images(request):
     # Get the ID from the request parameters
     pincode = request.GET.get('pincode')
