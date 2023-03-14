@@ -104,6 +104,13 @@ def list_employees(request):
     data = serializers.serialize('json', employees)
     return JsonResponse({'employees': data})
 
+
+def list_attendance(request):
+    attendance = Attendance.objects.all()
+    data = serializers.serialize('json', attendance)
+    return JsonResponse({'attendance': data})
+
+
 @csrf_exempt
 def delete_employee(request):
     if request.method == 'POST':
@@ -221,4 +228,3 @@ def record_attendance(request):
         return JsonResponse({'success': True, 'employee_id': employee_id, 'date': now.date()})
     else:
         return JsonResponse({'success': False, 'error': 'Invalid request method'})
-
