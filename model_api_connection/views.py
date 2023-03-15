@@ -271,3 +271,18 @@ def record_attendance(request):
         return JsonResponse({'success': True, 'employee_id': employee_id, 'date': now.date()})
     else:
         return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+
+@csrf_exempt
+def get_attendance(request):
+    if request.method == 'POST':
+        employee_id = request.POST.get('employee_id')
+        try:
+            employee = Employee.objects.get(id=employee_id)
+            attendance_records = Attendance.objects.filter(employee=employee)
+            data = serializers.serialize('json', attendance_records)
+            return JsonResponse({'success': True, 'attendance': data})
+        except (Employee.DoesNotExist, ValueError, TypeError):
+            return JsonResponse({'success': False, 'error': 'Employee does not exist'})
+    else:
+        return JsonResponse({'success': False, 'error': 'Invalid request method'})
