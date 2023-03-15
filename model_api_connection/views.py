@@ -1,15 +1,8 @@
-import uuid
-
-import pytz
 from django.core import serializers
-from django.shortcuts import render
-from django.http import HttpResponse, JsonResponse
-import requests
+from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-import cv2
 import requests
 from django.utils import timezone
-
 from model_api_connection.models import Employee, Attendance
 
 
@@ -217,30 +210,6 @@ def delete_images(request):
     except:
         return JsonResponse({'error': 'Could not find matching employee'})
 
-
-# @csrf_exempt
-# def record_attendance(request):
-#     if request.method == 'POST':
-#         employee_id = request.POST.get('employee_id')
-#         if not employee_id:
-#             return JsonResponse({'success': False, 'error': 'Employee ID is missing'})
-#
-#         # Check if the employee exists
-#         try:
-#             employee = Employee.objects.get(id=employee_id)
-#         except Employee.DoesNotExist:
-#             return JsonResponse({'success': False, 'error': 'Employee does not exist'})
-#
-#         # Get the current date and time
-#         now = timezone.now()
-#
-#         # Save the attendance record to the database
-#         attendance_record = Attendance(employee=employee, date=now.date())
-#         attendance_record.save()
-#
-#         return JsonResponse({'success': True, 'employee_id': employee_id, 'date': now.date()})
-#     else:
-#         return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 @csrf_exempt
 def record_attendance(request):
