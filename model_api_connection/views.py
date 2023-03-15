@@ -1,15 +1,8 @@
-import uuid
-
-import pytz
 from django.core import serializers
-from django.shortcuts import render
-from django.http import HttpResponse, JsonResponse
-import requests
+from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-import cv2
 import requests
 from django.utils import timezone
-
 from model_api_connection.models import Employee, Attendance
 
 
@@ -93,10 +86,30 @@ def add_employee(request):
         pincode = request.POST['pincode']
         employee = Employee(name=name, surname=surname, fathers_name=fathers_name, department=department,
                             pincode=pincode)
+        try:
+            Employee.objects.get(pincode=pincode)
+            return JsonResponse({'error': 'Employee with the same pincode already exists'})
+        except:
+            pass
+
         employee.save()
         return JsonResponse({'success': True})
     else:
         return JsonResponse({'success': False})
+
+
+@csrf_exempt
+def get_employee(request):
+    if request.method == 'POST':
+        pincode = request.POST.get('pincode')
+        try:
+            employee = Employee.objects.get(pincode=pincode)
+            data = serializers.serialize('json', [employee])
+            return JsonResponse({'success': True, 'employee': data})
+        except (Employee.DoesNotExist, ValueError, TypeError):
+            return JsonResponse({'success': False, 'error': 'Employee does not exist'})
+    else:
+        return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 
 def list_employees(request):
@@ -128,7 +141,7 @@ def delete_employee(request):
 @csrf_exempt
 def edit_employee(request):
     try:
-        employee_id=request.POST['employee_id']
+        employee_id = request.POST['employee_id']
         employee = Employee.objects.get(id=employee_id)
     except Employee.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Employee not found'})
@@ -203,30 +216,6 @@ def delete_images(request):
         return JsonResponse({'error': 'Could not find matching employee'})
 
 
-# @csrf_exempt
-# def record_attendance(request):
-#     if request.method == 'POST':
-#         employee_id = request.POST.get('employee_id')
-#         if not employee_id:
-#             return JsonResponse({'success': False, 'error': 'Employee ID is missing'})
-#
-#         # Check if the employee exists
-#         try:
-#             employee = Employee.objects.get(id=employee_id)
-#         except Employee.DoesNotExist:
-#             return JsonResponse({'success': False, 'error': 'Employee does not exist'})
-#
-#         # Get the current date and time
-#         now = timezone.now()
-#
-#         # Save the attendance record to the database
-#         attendance_record = Attendance(employee=employee, date=now.date())
-#         attendance_record.save()
-#
-#         return JsonResponse({'success': True, 'employee_id': employee_id, 'date': now.date()})
-#     else:
-#         return JsonResponse({'success': False, 'error': 'Invalid request method'})
-
 @csrf_exempt
 def record_attendance(request):
     if request.method == 'POST':
@@ -254,5 +243,20 @@ def record_attendance(request):
         attendance_record.save()
 
         return JsonResponse({'success': True, 'employee_id': employee_id, 'date': now.date()})
+    else:
+        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+
+@csrf_exempt
+def get_attendance(request):
+    if request.method == 'POST':
+        employee_id = request.POST.get('employee_id')
+        try:
+            employee = Employee.objects.get(id=employee_id)
+            attendance_records = Attendance.objects.filter(employee=employee)
+            data = serializers.serialize('json', attendance_records)
+            return JsonResponse({'success': True, 'attendance': data})
+        except (Employee.DoesNotExist, ValueError, TypeError):
+            return JsonResponse({'success': False, 'error': 'Employee does not exist'})
     else:
         return JsonResponse({'success': False, 'error': 'Invalid request method'})

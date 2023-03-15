@@ -1,8 +1,6 @@
 import uuid
 
-import pytz
 from django.db import models
-from django.utils import timezone
 
 
 class EmployeeManager(models.Manager):
