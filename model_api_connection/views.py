@@ -86,6 +86,12 @@ def add_employee(request):
         pincode = request.POST['pincode']
         employee = Employee(name=name, surname=surname, fathers_name=fathers_name, department=department,
                             pincode=pincode)
+        try:
+            Employee.objects.get(pincode=pincode)
+            return JsonResponse({'error': 'Employee with the same pincode already exists'})
+        except:
+            pass
+
         employee.save()
         return JsonResponse({'success': True})
     else:
@@ -96,7 +102,6 @@ def add_employee(request):
 def get_employee(request):
     if request.method == 'POST':
         pincode = request.POST.get('pincode')
-        print(pincode)
         try:
             employee = Employee.objects.get(pincode=pincode)
             data = serializers.serialize('json', [employee])
