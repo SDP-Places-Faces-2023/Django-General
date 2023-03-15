@@ -99,6 +99,21 @@ def add_employee(request):
         return JsonResponse({'success': False})
 
 
+@csrf_exempt
+def get_employee(request):
+    if request.method == 'POST':
+        pincode = request.POST.get('pincode')
+        print(pincode)
+        try:
+            employee = Employee.objects.get(pincode=pincode)
+            data = serializers.serialize('json', [employee])
+            return JsonResponse({'success': True, 'employee': data})
+        except (Employee.DoesNotExist, ValueError, TypeError):
+            return JsonResponse({'success': False, 'error': 'Employee does not exist'})
+    else:
+        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+
 def list_employees(request):
     employees = Employee.objects.all()
     data = serializers.serialize('json', employees)
@@ -128,7 +143,7 @@ def delete_employee(request):
 @csrf_exempt
 def edit_employee(request):
     try:
-        employee_id=request.POST['employee_id']
+        employee_id = request.POST['employee_id']
         employee = Employee.objects.get(id=employee_id)
     except Employee.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Employee not found'})
