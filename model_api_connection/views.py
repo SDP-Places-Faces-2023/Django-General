@@ -1,6 +1,7 @@
 import uuid
 
 import pytz
+from django.core import serializers
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 import requests
@@ -98,6 +99,18 @@ def add_employee(request):
         return JsonResponse({'success': False})
 
 
+def list_employees(request):
+    employees = Employee.objects.all()
+    data = serializers.serialize('json', employees)
+    return JsonResponse({'employees': data})
+
+
+def list_attendance(request):
+    attendance = Attendance.objects.all()
+    data = serializers.serialize('json', attendance)
+    return JsonResponse({'attendance': data})
+
+
 @csrf_exempt
 def delete_employee(request):
     if request.method == 'POST':
@@ -110,6 +123,34 @@ def delete_employee(request):
             return JsonResponse({'success': False, 'error': 'Employee does not exist'})
     else:
         return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+
+@csrf_exempt
+def edit_employee(request):
+    try:
+        employee_id=request.POST['employee_id']
+        employee = Employee.objects.get(id=employee_id)
+    except Employee.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Employee not found'})
+
+    if request.method == 'POST':
+        name = request.POST['name']
+        surname = request.POST['surname']
+        fathers_name = request.POST['fathers_name']
+        department = request.POST['department']
+        pincode = request.POST['pincode']
+
+        employee.name = name
+        employee.surname = surname
+        employee.fathers_name = fathers_name
+        employee.department = department
+        employee.pincode = pincode
+        employee.save()
+
+        return JsonResponse({'success': True})
+    else:
+        data = serializers.serialize('json', [employee, ])
+        return JsonResponse({'employee': data})
 
 
 @csrf_exempt
@@ -215,4 +256,3 @@ def record_attendance(request):
         return JsonResponse({'success': True, 'employee_id': employee_id, 'date': now.date()})
     else:
         return JsonResponse({'success': False, 'error': 'Invalid request method'})
-
