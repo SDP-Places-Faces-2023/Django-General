@@ -1,5 +1,7 @@
+import json
+
 from django.core import serializers
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import requests
 from django.utils import timezone
@@ -91,7 +93,6 @@ def add_employee(request):
             return JsonResponse({'error': 'Employee with the same pincode already exists'})
         except:
             pass
-
         employee.save()
         return JsonResponse({'success': True})
     else:
@@ -115,13 +116,15 @@ def get_employee(request):
 def list_employees(request):
     employees = Employee.objects.all()
     data = serializers.serialize('json', employees)
-    return JsonResponse({'employees': data})
+    formatted_data = json.dumps(json.loads(data), indent=4)
+    return HttpResponse(formatted_data, content_type='application/json')
 
 
 def list_attendance(request):
     attendance = Attendance.objects.all()
     data = serializers.serialize('json', attendance)
-    return JsonResponse({'attendance': data})
+    formatted_data = json.dumps(json.loads(data), indent=4)
+    return HttpResponse(formatted_data, content_type='application/json')
 
 
 @csrf_exempt
