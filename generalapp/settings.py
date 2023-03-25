@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-28zxac_oo-6ck(gmi@rf_2j-)&x+ppzr7l5%yrnw^-2yg0fjg@
 DEBUG = True
 ALLOWED_HOSTS = []
 
-USE_TZ = True
+USE_TZ = False
 TIME_ZONE = 'UTC'
 
 # Application definition

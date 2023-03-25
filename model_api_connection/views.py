@@ -1,14 +1,18 @@
 import base64
 import json
-
+from django.urls import reverse
+from django.http import QueryDict, HttpRequest
 from django.core import serializers
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import requests
 from django.utils import timezone
 from fastapi import UploadFile
+from datetime import date
 
 from model_api_connection.models import Employee, Attendance
+
+employee_attendance_cache = {}
 
 
 # These views are not necessary for now
@@ -59,22 +63,22 @@ from model_api_connection.models import Employee, Attendance
 @csrf_exempt
 def frame_post(request):
     if request.method == 'POST':
-        url = 'http://127.0.0.1:8000/detect_faces/'
-        # The url of the CNN model
-        url_face = 'http://127.0.0.1:8000/predict/'
-        # The url of the LBPH model
-        # url_face = 'http://127.0.0.1:8000/recognize_faces/'
+        url = 'http://127.0.0.1:8000/detect_recognize/'
         files = {'file': request.FILES['file'].read()}
         response = requests.post(url, files=files)
 
         if response.status_code == 200:
             data = response.json()
             print(data)
-            if data != "No Face":
-                rec_response = requests.post(url_face, files=files)
-                face_data = rec_response.json()
-                print(data, face_data)
-                return JsonResponse(face_data, safe=False)
+            if 'recognition_results' in data and 'predicted_face' in data['recognition_results']:
+                employee_id = data['recognition_results']['predicted_face']
+
+                if not has_attendance_recorded_today(employee_id):
+                    attendance_data = {'employee_id': employee_id}
+                    attendance_response = record_attendance(request, attendance_data)
+                    attendance_response_json = json.loads(attendance_response.content)
+                    data.update(attendance_response_json)
+
             return JsonResponse(data, safe=False)
         else:
             return JsonResponse({'error': 'Failed to retrieve data from FastAPI'}, status=500)
@@ -258,7 +262,7 @@ def get_images(request):
         # Build HTML img tags for each image file
         img_tags = []
         for image_filename, encoded_image in encoded_images.items():
-            img_tags.append(f'<img src="data:image/{image_filename.split(".")[-1]};base64,{encoded_image}" />')
+            img_tags.append(f'<img src="data:image/{image_filename.split(".")[-1]};base64,{encoded_image}"/>')
 
         # Join the img tags into a single string and return it in a JsonResponse
         return JsonResponse({'images': '\n'.join(img_tags)})
@@ -266,10 +270,35 @@ def get_images(request):
         return JsonResponse({'error': 'Could not get images'})
 
 
+def has_attendance_recorded_today(employee_id):
+    global employee_attendance_cache
+    now = timezone.now().date()
+
+    # Check the cache
+    cached_value = employee_attendance_cache.get(employee_id)
+    if isinstance(cached_value, date) and cached_value == now:
+        return True
+
+    try:
+        employee = Employee.objects.get(id=employee_id)
+    except Employee.DoesNotExist:
+        return False
+
+    existing_attendance_records = Attendance.objects.filter(employee=employee, date=now)
+
+    if existing_attendance_records.exists():
+        employee_attendance_cache[employee_id] = now
+        return True
+
+    # Update the cache with None to avoid unnecessary database queries
+    employee_attendance_cache[employee_id] = None
+    return False
+
+
 @csrf_exempt
-def record_attendance(request):
-    if request.method == 'POST':
-        employee_id = request.POST.get('employee_id')
+def record_attendance(request, attendance_data=None):
+    if request.method == 'POST' or attendance_data:
+        employee_id = attendance_data['employee_id'] if attendance_data else request.POST.get('employee_id')
         if not employee_id:
             return JsonResponse({'success': False, 'error': 'Employee ID is missing'})
 
@@ -283,15 +312,17 @@ def record_attendance(request):
         now = timezone.now()
 
         # Check if an attendance record already exists for this employee and date
-        existing_attendance_records = Attendance.objects.filter(employee=employee)
-        for record in existing_attendance_records:
-            if record.date.date() == now.date():
-                return JsonResponse({'success': False, 'error': 'Attendance already recorded for this employee today'})
+        existing_attendance_records = Attendance.objects.filter(employee=employee, date__date=now.date())
+        if existing_attendance_records.exists():
+            return JsonResponse({'success': False, 'error': 'Attendance already recorded for this employee today'})
 
         # Save the attendance record to the database
         attendance_record = Attendance(employee=employee, date=now.date())
         attendance_record.save()
 
+        # Update the employee_attendance_cache
+        employee_attendance_cache[employee_id] = now.date()
+        print(employee_attendance_cache)
         return JsonResponse({'success': True, 'employee_id': employee_id, 'date': now.date()})
     else:
         return JsonResponse({'success': False, 'error': 'Invalid request method'})
