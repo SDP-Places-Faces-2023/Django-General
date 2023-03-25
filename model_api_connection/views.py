@@ -83,10 +83,10 @@ def add_employee(request):
     if request.method == 'POST':
         name = request.POST['name']
         surname = request.POST['surname']
-        fathers_name = request.POST['fathers_name']
+        patronymic = request.POST['patronymic']
         department = request.POST['department']
         pincode = request.POST['pincode']
-        employee = Employee(name=name, surname=surname, fathers_name=fathers_name, department=department,
+        employee = Employee(name=name, surname=surname, patronymic=patronymic, department=department,
                             pincode=pincode)
         try:
             Employee.objects.get(pincode=pincode)
@@ -152,13 +152,13 @@ def edit_employee(request):
     if request.method == 'POST':
         name = request.POST['name']
         surname = request.POST['surname']
-        fathers_name = request.POST['fathers_name']
+        patronymic = request.POST['patronymic']
         department = request.POST['department']
         pincode = request.POST['pincode']
 
         employee.name = name
         employee.surname = surname
-        employee.fathers_name = fathers_name
+        employee.patronymic = patronymic
         employee.department = department
         employee.pincode = pincode
         employee.save()

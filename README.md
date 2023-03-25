@@ -15,6 +15,10 @@ then migrate the database to django using -> ```python manage.py migrate``` - if
 
 Then, run the ```subscription.py``` 
 
+This extension should be installed in PostgreSQL database:
+```
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp"; 
+``` 
 
 To create needed tables in PostgreSQL (if migration fails):
 
@@ -23,7 +27,7 @@ CREATE TABLE model_api_connection_employee (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(50) NOT NULL,
     surname VARCHAR(50) NOT NULL,
-    fathers_name VARCHAR(50) NOT NULL,
+    patronymic VARCHAR(50) NOT NULL,
     pincode VARCHAR(10) UNIQUE NOT NULL,
     department VARCHAR(50) NOT NULL
 );
