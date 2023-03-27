@@ -82,11 +82,21 @@ def list_employees(request):
     return HttpResponse(formatted_data, content_type='application/json')
 
 
-def list_attendance(request):
+def list_raw_attendance(request):
     attendance = Attendance.objects.all()
     data = serializers.serialize('json', attendance)
     formatted_data = json.dumps(json.loads(data), indent=4)
     return HttpResponse(formatted_data, content_type='application/json')
+
+
+def list_attendance(request):
+    attendance = Attendance.objects.select_related('employee').values(
+        'id', 'date',
+        'employee__id', 'employee__name', 'employee__surname', 'employee__patronymic',
+        'employee__pincode', 'employee__department'
+    )
+    attendance_list = list(attendance)
+    return JsonResponse(attendance_list, safe=False)
 
 
 @csrf_exempt
