@@ -99,12 +99,40 @@ def list_attendance(request):
     return JsonResponse(attendance_list, safe=False)
 
 
+#
+# @csrf_exempt
+# def delete_employee(request):
+#     if request.method == 'POST':
+#         pincode = request.POST.get('pincode')
+#         try:
+#             employee = Employee.objects.get(pincode=pincode)
+#             employee.delete()
+#             return JsonResponse({'success': True, 'deleted': pincode})
+#         except (Employee.DoesNotExist, ValueError, TypeError):
+#             return JsonResponse({'success': False, 'error': 'Employee does not exist'})
+#     else:
+#         return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
 @csrf_exempt
 def delete_employee(request):
     if request.method == 'POST':
         pincode = request.POST.get('pincode')
         try:
             employee = Employee.objects.get(pincode=pincode)
+
+            # Check if the employee has images
+            has_images_response = has_images(request, pincode)
+            has_images_data = json.loads(has_images_response.content)
+
+            if has_images_data.get('has_images'):
+                # Delete the employee's images
+                delete_images_response = delete_images(request, pincode)
+                delete_images_data = json.loads(delete_images_response.content)
+
+                if not delete_images_data.get('success', False):
+                    return JsonResponse({'success': False, 'error': "Error deleting employee's images"})
+
+            # Delete the employee
             employee.delete()
             return JsonResponse({'success': True, 'deleted': pincode})
         except (Employee.DoesNotExist, ValueError, TypeError):
@@ -143,96 +171,194 @@ def edit_employee(request):
 
 @csrf_exempt
 def upload_images(request):
-    # Get the ID from the request parameters
-    pincode = request.GET.get('pincode')
-    employee = Employee.objects.get(pincode=pincode)
+    try:
+        # Get the ID from the request parameters
+        pincode = request.GET.get('pincode')
+        employee = Employee.objects.get(pincode=pincode)
 
-    employee_id = employee.id
-    # Get the images from the request body
-    images = request.FILES.getlist('images')
+        employee_id = employee.id
+        # Get the images from the request body
+        images = request.FILES.getlist('images')
 
-    # Build the request URL
-    url = 'http://localhost:8000/upload_images/?id=' + str(employee_id)
+        # Build the request URL
+        url = f'http://localhost:8000/upload_images/?id={employee_id}'
 
-    # Build the request data
-    data = []
-    for image in images:
-        data.append(('images', (image.name, image.file.read(), image.content_type)))
+        # Build the request data
+        data = []
+        for image in images:
+            data.append(('images', (image.name, image.file.read(), image.content_type)))
 
-    # Send the request
-    response = requests.post(url, files=data)
+        # Send the request
+        response = requests.post(url, files=data)
 
-    if response.status_code == 200:
-        return JsonResponse({'success': True, 'added images to': employee_id})
-    else:
-        return JsonResponse({'success': False})
+        if response.status_code == 200:
+            return JsonResponse({'success': True, 'added images to': employee_id})
+        else:
+            return JsonResponse({'success': False, 'error': 'Error uploading images to FastAPI server'})
 
+    except Employee.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Employee does not exist'})
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': f'An unexpected error occurred: {str(e)}'})
+
+
+# @csrf_exempt
+# def upload_images(request):
+#     # Get the ID from the request parameters
+#     pincode = request.GET.get('pincode')
+#     employee = Employee.objects.get(pincode=pincode)
+#
+#     employee_id = employee.id
+#     # Get the images from the request body
+#     images = request.FILES.getlist('images')
+#
+#     # Build the request URL
+#     url = 'http://localhost:8000/upload_images/?id=' + str(employee_id)
+#
+#     # Build the request data
+#     data = []
+#     for image in images:
+#         data.append(('images', (image.name, image.file.read(), image.content_type)))
+#
+#     # Send the request
+#     response = requests.post(url, files=data)
+#
+#     if response.status_code == 200:
+#         return JsonResponse({'success': True, 'added images to': employee_id})
+#     else:
+#         return JsonResponse({'success': False})
+
+
+def delete_images(request, pincode):
+    try:
+        employee = Employee.objects.get(pincode=pincode)
+        employee_id = employee.id
+        url = f'http://localhost:8000/delete_images/?id={employee_id}'
+        response = requests.post(url)
+        response_json = response.json()
+        message = response_json.get('message')
+        return JsonResponse({'success': True, 'message': message})
+    except:
+        return JsonResponse({'success': False, 'error': 'Could not reach FastAPI server'})
+
+
+# @csrf_exempt
+# def delete_images(request):
+#     # Get the ID from the request parameters
+#     pincode = request.GET.get('pincode')
+#     try:
+#
+#         employee = Employee.objects.get(pincode=pincode)
+#
+#         employee_id = employee.id
+#
+#         # Build the request URL
+#         url = 'http://localhost:8000/delete_images/?id=' + str(employee_id)
+#
+#         response = requests.post(url)
+#         response_json = response.json()
+#         message = response_json.get('message')
+#         return JsonResponse({'message': message})
+#
+#     except:
+#         return JsonResponse({'error': 'Could not reach FastAPI server'})
+
+
+def has_images(request, pincode):
+    try:
+        employee = Employee.objects.get(pincode=pincode)
+        employee_id = employee.id
+        url = f'http://localhost:8000/has_images/?id={employee_id}'
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            has_images = response.json().get('has_images')
+            return JsonResponse({'has_images': has_images})
+        else:
+            return JsonResponse({'error': 'Could not check for images'})
+    except:
+        return JsonResponse({'error': 'Employee not found'})
+
+
+# @csrf_exempt
+# def has_images(request):
+#     pincode = request.GET.get('pincode')
+#     employee = Employee.objects.get(pincode=pincode)
+#     employee_id = employee.id
+#     url = 'http://localhost:8000/has_images/?id=' + str(employee_id)
+#
+#     response = requests.get(url)
+#
+#     if response.status_code == 200:
+#         has_images = response.json().get('has_images')
+#         return JsonResponse({'has_images': has_images})
+#     else:
+#         return JsonResponse({'error': 'Could not check for images'})
 
 @csrf_exempt
-def delete_images(request):
-    # Get the ID from the request parameters
-    pincode = request.GET.get('pincode')
+def get_images(request):
     try:
-
+        # Get the ID from the request parameters
+        pincode = request.GET.get('pincode')
         employee = Employee.objects.get(pincode=pincode)
 
         employee_id = employee.id
 
         # Build the request URL
-        url = 'http://localhost:8000/delete_images/?id=' + str(employee_id)
+        url = f'http://localhost:8000/get_images/?id={employee_id}'
 
-        response = requests.post(url)
-        response_json = response.json()
-        message = response_json.get('message')
-        return JsonResponse({'message': message})
+        # Send the request
+        response = requests.get(url)
 
-    except:
-        return JsonResponse({'error': 'Could not reach FastAPI server'})
+        if response.status_code == 200:
+            # Parse the response as a dictionary of image filenames and their corresponding Base64-encoded strings
+            encoded_images = response.json()
+
+            # Build HTML img tags for each image file
+            img_tags = []
+            for image_filename, encoded_image in encoded_images.items():
+                img_tags.append(f'<img src="data:image/{image_filename.split(".")[-1]};base64,{encoded_image}"/>')
+
+            # Join the img tags into a single string and return it in a JsonResponse
+            return JsonResponse({'images': '\n'.join(img_tags)})
+        else:
+            return JsonResponse({'error': 'Could not get images'})
+
+    except Employee.DoesNotExist:
+        return JsonResponse({'error': 'Employee does not exist'})
+
+    except Exception as e:
+        return JsonResponse({'error': f'An unexpected error occurred: {str(e)}'})
 
 
-@csrf_exempt
-def has_images(request):
-    pincode = request.GET.get('pincode')
-    employee = Employee.objects.get(pincode=pincode)
-    employee_id = employee.id
-    url = 'http://localhost:8000/has_images/?id=' + str(employee_id)
-
-    response = requests.get(url)
-
-    if response.status_code == 200:
-        has_images = response.json().get('has_images')
-        return JsonResponse({'has_images': has_images})
-    else:
-        return JsonResponse({'error': 'Could not check for images'})
-
-
-@csrf_exempt
-def get_images(request):
-    # Get the ID from the request parameters
-    pincode = request.GET.get('pincode')
-    employee = Employee.objects.get(pincode=pincode)
-
-    employee_id = employee.id
-
-    # Build the request URL
-    url = 'http://localhost:8000/get_images/?id=' + str(employee_id)
-
-    # Send the request
-    response = requests.get(url)
-
-    if response.status_code == 200:
-        # Parse the response as a dictionary of image filenames and their corresponding Base64-encoded strings
-        encoded_images = response.json()
-
-        # Build HTML img tags for each image file
-        img_tags = []
-        for image_filename, encoded_image in encoded_images.items():
-            img_tags.append(f'<img src="data:image/{image_filename.split(".")[-1]};base64,{encoded_image}"/>')
-
-        # Join the img tags into a single string and return it in a JsonResponse
-        return JsonResponse({'images': '\n'.join(img_tags)})
-    else:
-        return JsonResponse({'error': 'Could not get images'})
+# @csrf_exempt
+# def get_images(request):
+#     # Get the ID from the request parameters
+#     pincode = request.GET.get('pincode')
+#     employee = Employee.objects.get(pincode=pincode)
+#
+#     employee_id = employee.id
+#
+#     # Build the request URL
+#     url = 'http://localhost:8000/get_images/?id=' + str(employee_id)
+#
+#     # Send the request
+#     response = requests.get(url)
+#
+#     if response.status_code == 200:
+#         # Parse the response as a dictionary of image filenames and their corresponding Base64-encoded strings
+#         encoded_images = response.json()
+#
+#         # Build HTML img tags for each image file
+#         img_tags = []
+#         for image_filename, encoded_image in encoded_images.items():
+#             img_tags.append(f'<img src="data:image/{image_filename.split(".")[-1]};base64,{encoded_image}"/>')
+#
+#         # Join the img tags into a single string and return it in a JsonResponse
+#         return JsonResponse({'images': '\n'.join(img_tags)})
+#     else:
+#         return JsonResponse({'error': 'Could not get images'})
 
 
 def has_attendance_recorded_today(employee_id):
