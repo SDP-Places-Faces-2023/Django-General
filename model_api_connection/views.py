@@ -203,32 +203,6 @@ def upload_images(request):
         return JsonResponse({'success': False, 'error': f'An unexpected error occurred: {str(e)}'})
 
 
-# @csrf_exempt
-# def upload_images(request):
-#     # Get the ID from the request parameters
-#     pincode = request.GET.get('pincode')
-#     employee = Employee.objects.get(pincode=pincode)
-#
-#     employee_id = employee.id
-#     # Get the images from the request body
-#     images = request.FILES.getlist('images')
-#
-#     # Build the request URL
-#     url = 'http://localhost:8000/upload_images/?id=' + str(employee_id)
-#
-#     # Build the request data
-#     data = []
-#     for image in images:
-#         data.append(('images', (image.name, image.file.read(), image.content_type)))
-#
-#     # Send the request
-#     response = requests.post(url, files=data)
-#
-#     if response.status_code == 200:
-#         return JsonResponse({'success': True, 'added images to': employee_id})
-#     else:
-#         return JsonResponse({'success': False})
-
 @csrf_exempt
 def delete_images(request, pincode):
     try:
