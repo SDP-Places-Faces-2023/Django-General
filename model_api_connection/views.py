@@ -229,7 +229,7 @@ def upload_images(request):
 #     else:
 #         return JsonResponse({'success': False})
 
-
+@csrf_exempt
 def delete_images(request, pincode):
     try:
         employee = Employee.objects.get(pincode=pincode)
@@ -264,7 +264,7 @@ def delete_images(request, pincode):
 #     except:
 #         return JsonResponse({'error': 'Could not reach FastAPI server'})
 
-
+@csrf_exempt
 def has_images(request, pincode):
     try:
         employee = Employee.objects.get(pincode=pincode)
