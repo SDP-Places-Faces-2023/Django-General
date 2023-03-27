@@ -265,8 +265,9 @@ def delete_images(request, pincode):
 #         return JsonResponse({'error': 'Could not reach FastAPI server'})
 
 @csrf_exempt
-def has_images(request, pincode):
+def has_images(request, pincode=None):
     try:
+        pincode = request.POST.get('pincode')
         employee = Employee.objects.get(pincode=pincode)
         employee_id = employee.id
         url = f'http://localhost:8000/has_images/?id={employee_id}'
