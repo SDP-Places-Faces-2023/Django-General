@@ -204,8 +204,9 @@ def upload_images(request):
 
 
 @csrf_exempt
-def delete_images(request, pincode):
+def delete_images(request, pincode=None):
     try:
+        pincode = request.POST.get('pincode')
         employee = Employee.objects.get(pincode=pincode)
         employee_id = employee.id
         url = f'http://localhost:8000/delete_images/?id={employee_id}'
