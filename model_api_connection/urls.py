@@ -1,7 +1,8 @@
 from django.urls import path
 from . import views
 from .views import add_employee, delete_employee, upload_images, delete_images, record_attendance, list_employees, \
-    list_attendance, list_raw_attendance, edit_employee, get_employee, get_attendance, get_images, has_images
+    list_attendance, list_raw_attendance, edit_employee, get_employee, get_attendance, get_images, has_images, \
+    delete_files
 
 urlpatterns = [
     # path('hello/', views.say_hello),
@@ -21,6 +22,7 @@ urlpatterns = [
     path('get_images/', get_images, name='get_images'),
     path('has_images/', has_images, name='has_images'),
     path('delete_images/', delete_images, name='delete_images'),
+    path('delete_files/', delete_files, name='delete_files'),
     path('record_attendance/', record_attendance, name='record_attendance'),
     path('get_attendance/', get_attendance, name='get_attendance'),
 

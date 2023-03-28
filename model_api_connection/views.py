@@ -217,6 +217,30 @@ def delete_images(request, pincode):
         return JsonResponse({'success': False, 'error': 'Could not reach FastAPI server'})
 
 
+@csrf_exempt
+def delete_files(request):
+    try:
+        pincode = request.POST.get('pincode')
+        filenames = request.POST.getlist('filenames')
+        employee = Employee.objects.get(pincode=pincode)
+        employee_id = employee.id
+        str_id = f'{employee_id}'
+        # FastAPI endpoint URL
+        fastapi_url = f"http://localhost:8000/delete_files/?id={str_id}"
+        print(str_id)
+        # Send a POST request to the FastAPI endpoint with the filenames
+        payload = filenames
+        response = requests.post(fastapi_url, data=json.dumps(payload))
+
+        if response.status_code == 200:
+            return JsonResponse(response.json())
+        else:
+            return JsonResponse({'error': 'Could not delete files'})
+    except Employee.DoesNotExist:
+        return JsonResponse({'error': 'Employee not found'})
+    except Exception as e:
+        return JsonResponse({'error': f'An unexpected error occurred: {str(e)}'})
+
 # @csrf_exempt
 # def delete_images(request):
 #     # Get the ID from the request parameters
@@ -343,6 +367,7 @@ def get_images(request):
 
     except Exception as e:
         return JsonResponse({'error': f'An unexpected error occurred: {str(e)}'})
+
 
 # @csrf_exempt
 # def get_images(request):
