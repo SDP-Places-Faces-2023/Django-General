@@ -270,6 +270,41 @@ def has_images(request, pincode=None):
 #         return JsonResponse({'has_images': has_images})
 #     else:
 #         return JsonResponse({'error': 'Could not check for images'})
+#
+# @csrf_exempt
+# def get_images(request):
+#     try:
+#         # Get the ID from the request parameters
+#         pincode = request.GET.get('pincode')
+#         employee = Employee.objects.get(pincode=pincode)
+#
+#         employee_id = employee.id
+#
+#         # Build the request URL
+#         url = f'http://localhost:8000/get_images/?id={employee_id}'
+#
+#         # Send the request
+#         response = requests.get(url)
+#
+#         if response.status_code == 200:
+#             # Parse the response as a dictionary of image filenames and their corresponding Base64-encoded strings
+#             encoded_images = response.json()
+#
+#             # Build HTML img tags for each image file
+#             img_tags = []
+#             for image_filename, encoded_image in encoded_images.items():
+#                 img_tags.append(f'<img src="data:image/{image_filename.split(".")[-1]};base64,{encoded_image}"/>')
+#
+#             # Join the img tags into a single string and return it in a JsonResponse
+#             return JsonResponse({'images': '\n'.join(img_tags)})
+#         else:
+#             return JsonResponse({'error': 'Could not get images'})
+#
+#     except Employee.DoesNotExist:
+#         return JsonResponse({'error': 'Employee does not exist'})
+#
+#     except Exception as e:
+#         return JsonResponse({'error': f'An unexpected error occurred: {str(e)}'})
 
 @csrf_exempt
 def get_images(request):
@@ -290,13 +325,16 @@ def get_images(request):
             # Parse the response as a dictionary of image filenames and their corresponding Base64-encoded strings
             encoded_images = response.json()
 
-            # Build HTML img tags for each image file
-            img_tags = []
-            for image_filename, encoded_image in encoded_images.items():
-                img_tags.append(f'<img src="data:image/{image_filename.split(".")[-1]};base64,{encoded_image}"/>')
+            # Build a list of dictionaries containing the filename and image data
+            images = []
+            for filename, data in encoded_images.items():
+                images.append({
+                    'filename': filename,
+                    'image': data,
+                })
 
-            # Join the img tags into a single string and return it in a JsonResponse
-            return JsonResponse({'images': '\n'.join(img_tags)})
+            # Return the list of images as a JsonResponse
+            return JsonResponse(images, safe=False)
         else:
             return JsonResponse({'error': 'Could not get images'})
 
@@ -305,7 +343,6 @@ def get_images(request):
 
     except Exception as e:
         return JsonResponse({'error': f'An unexpected error occurred: {str(e)}'})
-
 
 # @csrf_exempt
 # def get_images(request):
