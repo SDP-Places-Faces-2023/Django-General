@@ -1,6 +1,7 @@
+import datetime
 import json
 from threading import Thread
-
+import base64
 from django.core import serializers
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -12,6 +13,8 @@ import subscription
 from model_api_connection.models import Employee, Attendance
 
 employee_attendance_cache = {}
+current_frame_data = {}
+last_recognized_data = None
 
 
 @csrf_exempt
@@ -36,14 +39,17 @@ def stop_subscription(request):
 
 @csrf_exempt
 def frame_post(request):
+    global last_recognized_data
+    global current_frame_data
     if request.method == 'POST':
         url = 'http://127.0.0.1:8000/detect_recognize/'
-        files = {'file': request.FILES['file'].read()}
+        file_data = request.FILES['file'].read()
+        files = {'file': file_data}
+        current_frame_data = file_data
         response = requests.post(url, files=files)
-
+        print(response)
         if response.status_code == 200:
             data = response.json()
-            print(data)
             if 'recognition_results' in data and 'predicted_face' in data['recognition_results']:
                 employee_id = data['recognition_results']['predicted_face']
 
@@ -52,12 +58,46 @@ def frame_post(request):
                     attendance_response = record_attendance(request, attendance_data)
                     attendance_response_json = json.loads(attendance_response.content)
                     data.update(attendance_response_json)
+                recognition_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                last_recognized_data = {
+                    'frame': file_data,
+                    'employee_id': employee_id,
+                    'recognition_time': recognition_time
+                }
 
             return JsonResponse(data, safe=False)
         else:
             return JsonResponse({'error': 'Failed to retrieve data from FastAPI'}, status=500)
     return JsonResponse({'error': 'Invalid request method'}, status=400)
 
+
+@csrf_exempt
+def get_frame(request):
+    global last_recognized_data
+    global current_frame_data
+
+    if request.method == 'GET':
+        if last_recognized_data:
+            # Convert the last recognized frame to a base64 string without any tags
+            last_frame_base64 = base64.b64encode(last_recognized_data['frame']).decode('utf-8').replace('\n', '')
+
+            # Get the recognition timestamp
+            recognition_time = last_recognized_data['recognition_time']
+
+            # Convert the current frame data to a base64 string without any tags
+            current_frame_base64 = base64.b64encode(current_frame_data).decode('utf-8').replace('\n', '')
+
+            response_data = {
+                'last_recognized_frame': last_frame_base64,
+                'last_employee_id': last_recognized_data['employee_id'],
+                'current_frame': current_frame_base64,
+                'timestamp': recognition_time
+            }
+            return JsonResponse(response_data, safe=False)
+        else:
+            return JsonResponse({'error': 'No recognized frame available'}, status=404)
+    else:
+        return JsonResponse({'error': 'Invalid request method'}, status=400)
 
 @csrf_exempt
 def training_status(request):
