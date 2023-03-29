@@ -1,4 +1,6 @@
 import json
+from threading import Thread
+
 from django.core import serializers
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -6,9 +8,30 @@ import requests
 from django.utils import timezone
 from datetime import date
 
+import subscription
 from model_api_connection.models import Employee, Attendance
 
 employee_attendance_cache = {}
+
+
+@csrf_exempt
+def start_subscription(request):
+    try:
+        # Start the subscription loop in a separate thread
+        t = Thread(target=subscription.start_subscription)
+        t.start()
+        return JsonResponse({'status': 'success', 'message': 'Subscription started successfully.'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': f'Error starting subscription: {str(e)}'})
+
+
+@csrf_exempt
+def stop_subscription(request):
+    try:
+        subscription.stop_subscription()
+        return JsonResponse({'status': 'success', 'message': 'Subscription stopped successfully.'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': f'Error stopping subscription: {str(e)}'})
 
 
 @csrf_exempt

@@ -1,10 +1,12 @@
 from django.urls import path
 from .views import add_employee, delete_employee, upload_images, delete_images, record_attendance, list_employees, \
     list_attendance, list_raw_attendance, edit_employee, get_employee, get_attendance, get_images, has_images, \
-    delete_files, frame_post, training_status, train_model
+    delete_files, frame_post, training_status, train_model, start_subscription, stop_subscription
 
 urlpatterns = {
     path('frame_post/', frame_post, name='frame_post'),
+    path('start_subscription/', start_subscription, name='start_subscription'),
+    path('stop_subscription/', stop_subscription, name='stop_subscription'),
     path('training_status/', training_status, name='training_status'),
     path('training_model/', train_model, name='train_model'),
     path('add_employee/', add_employee, name='add_employee'),

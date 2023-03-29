@@ -2,15 +2,19 @@ import time
 import cv2
 import requests
 
+# Global flag to control the subscription loop
+is_running = False
+
 
 def subscription_loop():
+    global is_running
     cap = cv2.VideoCapture(0)
     url = 'http://127.0.0.1:9000/model_api_connection/frame_post/'
 
     try:
-        while True:
+        while is_running:
             ret, frame = cap.read()
-            cv2.waitKey(1)
+            key = cv2.waitKey(1) & 0xFF
             cv2.imshow("current_frame", frame)
             if not ret:
                 continue
@@ -25,13 +29,31 @@ def subscription_loop():
             else:
                 print(f"Failed to retrieve data from Django: {response.status_code}")
 
+            # Check for the window close event and exit the loop if the window is closed
+            if key == ord("q"):
+                break
+
             # Control the rate at which frames are captured and sent to the API
             time.sleep(0.05)
 
     finally:
         # Release the camera and destroy the window
         cap.release()
+        cv2.destroyAllWindows()
+
+
+def start_subscription():
+    global is_running
+    if not is_running:
+        is_running = True
+        subscription_loop()
+
+
+def stop_subscription():
+    global is_running
+    if is_running:
+        is_running = False
 
 
 if __name__ == '__main__':
-    subscription_loop()
+    start_subscription()
