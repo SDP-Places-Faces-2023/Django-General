@@ -1,16 +1,12 @@
 from django.urls import path
-from . import views
 from .views import add_employee, delete_employee, upload_images, delete_images, record_attendance, list_employees, \
     list_attendance, list_raw_attendance, edit_employee, get_employee, get_attendance, get_images, has_images, \
-    delete_files
+    delete_files, frame_post, training_status, train_model
 
-urlpatterns = [
-    # path('hello/', views.say_hello),
-    # path('fff/', views.get_data_from_fastapi),
-    # path('object-detection/', views.get_object_detection),
-    # path('object-classification/', views.get_object_classification),
-    # path('face-recognition/', views.get_face_recognition),
-    path('frame_post/', views.frame_post, name='frame_post'),
+urlpatterns = {
+    path('frame_post/', frame_post, name='frame_post'),
+    path('training_status/', training_status, name='training_status'),
+    path('training_model/', train_model, name='train_model'),
     path('add_employee/', add_employee, name='add_employee'),
     path('list_employees/', list_employees, name='list_employees'),
     path('get_employee/', get_employee, name='get_employee'),
@@ -26,4 +22,4 @@ urlpatterns = [
     path('record_attendance/', record_attendance, name='record_attendance'),
     path('get_attendance/', get_attendance, name='get_attendance'),
 
-]
+}

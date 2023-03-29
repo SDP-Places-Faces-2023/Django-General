@@ -31,6 +31,8 @@ ALLOWED_HOSTS = []
 USE_TZ = False
 TIME_ZONE = 'UTC'
 
+DATA_UPLOAD_MAX_NUMBER_FILES = [200]
+
 # Application definition
 
 INSTALLED_APPS = [
