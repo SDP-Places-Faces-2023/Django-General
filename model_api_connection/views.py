@@ -3,11 +3,14 @@ import json
 from threading import Thread
 import base64
 from django.core import serializers
+from django.db import connection
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import requests
 from django.utils import timezone
 from datetime import date
+
+from django.views.decorators.http import require_GET
 
 import subscription
 from model_api_connection.models import Employee, Attendance
@@ -47,9 +50,9 @@ def frame_post(request):
         files = {'file': file_data}
         current_frame_data = file_data
         response = requests.post(url, files=files)
-        print(response)
         if response.status_code == 200:
             data = response.json()
+            print(data)
             if 'recognition_results' in data and 'predicted_face' in data['recognition_results']:
                 employee_id = data['recognition_results']['predicted_face']
 
@@ -98,6 +101,7 @@ def get_frame(request):
             return JsonResponse({'error': 'No recognized frame available'}, status=404)
     else:
         return JsonResponse({'error': 'Invalid request method'}, status=400)
+
 
 @csrf_exempt
 def training_status(request):
@@ -444,3 +448,31 @@ def get_attendance(request):
             return JsonResponse({'success': False, 'error': 'Employee does not exist'})
     else:
         return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+
+@require_GET
+def health_check(request):
+    try:
+        # Check the health of the FastAPI application
+        response = requests.get('http://localhost:8000/health')
+        response.raise_for_status()
+        fastapi_status = 'ok'
+    except:
+        fastapi_status = 'error'
+
+    # Check the health of the Django application
+    django_status = 'ok'
+
+    # Check the health of the PostgreSQL database
+    try:
+        cursor = connection.cursor()
+        cursor.execute('SELECT 1')
+        database_status = 'ok'
+    except:
+        database_status = 'error'
+
+    return JsonResponse({
+        'django_status': django_status,
+        'fastapi_status': fastapi_status,
+        'database_status': database_status,
+    })
