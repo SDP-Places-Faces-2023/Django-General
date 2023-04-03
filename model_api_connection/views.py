@@ -1,19 +1,17 @@
 import datetime
 import json
-from threading import Thread
 import base64
+import requests
+import subscription
+from model_api_connection.models import Employee, Attendance
 from django.core import serializers
 from django.db import connection
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-import requests
+from django.views.decorators.http import require_GET
 from django.utils import timezone
 from datetime import date
-
-from django.views.decorators.http import require_GET
-
-import subscription
-from model_api_connection.models import Employee, Attendance
+from threading import Thread
 
 employee_attendance_cache = {}
 current_frame_data = {}
