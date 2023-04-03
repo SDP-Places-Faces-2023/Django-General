@@ -454,20 +454,20 @@ def health_check(request):
         # Check the health of the FastAPI application
         response = requests.get('http://localhost:8000/health')
         response.raise_for_status()
-        fastapi_status = 'ok'
+        fastapi_status = True
     except:
-        fastapi_status = 'error'
+        fastapi_status = False
 
     # Check the health of the Django application
-    django_status = 'ok'
+    django_status = True
 
     # Check the health of the PostgreSQL database
     try:
         cursor = connection.cursor()
         cursor.execute('SELECT 1')
-        database_status = 'ok'
+        database_status = True
     except:
-        database_status = 'error'
+        database_status = False
 
     return JsonResponse({
         'django_status': django_status,
