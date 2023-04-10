@@ -164,8 +164,29 @@ def get_employee(request):
         return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 
+#
+# def list_employees(request):
+#     employees = Employee.objects.all()
+#     data = serializers.serialize('json', employees)
+#     formatted_data = json.dumps(json.loads(data), indent=4)
+#     return HttpResponse(formatted_data, content_type='application/json')
+@csrf_exempt
 def list_employees(request):
+    name = request.POST.get('name')
+    surname = request.POST.get('surname')
+    department = request.POST.get('department')
+    pincode = request.POST.get('pincode')
     employees = Employee.objects.all()
+
+    if name:
+        employees = employees.filter(name__icontains=name)
+    if surname:
+        employees = employees.filter(surname__icontains=surname)
+    if pincode:
+        employees = employees.filter(pincode__icontains=pincode)
+    if department:
+        employees = employees.filter(department__icontains=department)
+
     data = serializers.serialize('json', employees)
     formatted_data = json.dumps(json.loads(data), indent=4)
     return HttpResponse(formatted_data, content_type='application/json')
@@ -178,13 +199,53 @@ def list_raw_attendance(request):
     return HttpResponse(formatted_data, content_type='application/json')
 
 
+#
+# def list_attendance(request):
+#     attendance = Attendance.objects.select_related('employee').values(
+#         'id', 'date',
+#         'employee__id', 'employee__name', 'employee__surname', 'employee__patronymic',
+#         'employee__pincode', 'employee__department'
+#     )
+#     attendance_list = list(attendance)
+#     return JsonResponse(attendance_list, safe=False)
+
+
+@csrf_exempt
 def list_attendance(request):
-    attendance = Attendance.objects.select_related('employee').values(
+    date_str = request.POST.get('date')
+    start_date_str = request.POST.get('start_date')
+    end_date_str = request.POST.get('end_date')
+    name = request.POST.get('name')
+    surname = request.POST.get('surname')
+    pincode = request.POST.get('pincode')
+    department = request.POST.get('department')
+
+    attendance = Attendance.objects.select_related('employee')
+
+    if date_str:
+        date = datetime.datetime.fromisoformat(date_str).date()
+        attendance = attendance.filter(date__date=date)
+    elif start_date_str and end_date_str:
+        start_date = datetime.datetime.fromisoformat(start_date_str).date()
+        end_date = datetime.datetime.fromisoformat(end_date_str).date()
+        attendance = attendance.filter(date__date__range=(start_date, end_date))
+
+    if name:
+        attendance = attendance.filter(employee__name__icontains=name)
+    if surname:
+        attendance = attendance.filter(employee__surname__icontains=surname)
+    if pincode:
+        attendance = attendance.filter(employee__pincode__icontains=pincode)
+    if department:
+        attendance = attendance.filter(employee__department__icontains=department)
+
+    attendance = attendance.values(
         'id', 'date',
         'employee__id', 'employee__name', 'employee__surname', 'employee__patronymic',
         'employee__pincode', 'employee__department'
     )
     attendance_list = list(attendance)
+
     return JsonResponse(attendance_list, safe=False)
 
 
