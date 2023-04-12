@@ -24,18 +24,18 @@ def start_subscription(request):
         # Start the subscription loop in a separate thread
         t = Thread(target=subscription.start_subscription)
         t.start()
-        return JsonResponse({'status': 'success', 'message': 'Subscription started successfully.'})
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': f'Error starting subscription: {str(e)}'})
+        return JsonResponse({'success': True, 'response': {'message': 'Subscription started successfully'}})
+    except:
+        return JsonResponse({'success': False, 'response': {'message': 'Error starting subscription'}})
 
 
 @csrf_exempt
 def stop_subscription(request):
     try:
         subscription.stop_subscription()
-        return JsonResponse({'status': 'success', 'message': 'Subscription stopped successfully.'})
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': f'Error stopping subscription: {str(e)}'})
+        return JsonResponse({'success': True, 'response': {'message': 'Subscription stopped successfully'}})
+    except:
+        return JsonResponse({'success': False, 'response': {'message': 'Error stopping subscription'}})
 
 
 @csrf_exempt
@@ -66,10 +66,11 @@ def frame_post(request):
                     'recognition_time': recognition_time
                 }
 
-            return JsonResponse(data, safe=False)
+            return JsonResponse({'success': True, 'response': data}, safe=False)
         else:
-            return JsonResponse({'error': 'Failed to retrieve data from FastAPI'}, status=500)
-    return JsonResponse({'error': 'Invalid request method'}, status=400)
+            return JsonResponse({'success': False, 'response': {'error': 'Failed to retrieve data from FastAPI'}},
+                                status=500)
+    return JsonResponse({'success': False, 'response': {'error': 'Invalid request method'}}, status=400)
 
 
 @csrf_exempt
@@ -94,39 +95,46 @@ def get_frame(request):
                 'current_frame': current_frame_base64,
                 'timestamp': recognition_time
             }
-            return JsonResponse(response_data, safe=False)
+            return JsonResponse({'success': True, 'response': response_data}, safe=False)
         else:
-            return JsonResponse({'error': 'No recognized frame available'}, status=404)
+            return JsonResponse({'success': False, 'response': {'error': 'No recognized frame available'}}, status=404)
     else:
-        return JsonResponse({'error': 'Invalid request method'}, status=400)
+        return JsonResponse({'success': False, 'response': {'error': 'Invalid request method'}}, status=400)
 
 
 @csrf_exempt
 def training_status(request):
-    if request.method == 'GET':
-        url = 'http://localhost:8000/training_status/'
-        response = requests.get(url)
+    try:
+        if request.method == 'GET':
+            url = 'http://localhost:8000/training_status/'
+            response = requests.get(url)
 
-        if response.status_code == 200:
-            return JsonResponse(response.json(), safe=False)
+            if response.status_code == 200:
+                return JsonResponse({'success': True, 'response': response.json()}, safe=False)
+            else:
+                return JsonResponse(
+                    {'success': False, 'response': {'error': 'Error retrieving training status from FastAPI server'}})
         else:
-            return JsonResponse({'success': False, 'error': 'Error retrieving training status from FastAPI server'})
-    else:
-        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+            return JsonResponse({'success': False, 'response': {'error': 'Invalid request method'}})
+    except:
+        return JsonResponse({'success': False, 'response': {'error': 'Could not reach FastAPI'}})
 
 
 @csrf_exempt
 def train_model(request):
-    if request.method == 'POST':
-        url = 'http://localhost:8000/train_model/'
-        response = requests.post(url)
+    try:
+        if request.method == 'POST':
+            url = 'http://localhost:8000/train_model/'
+            response = requests.post(url)
 
-        if response.status_code == 200:
-            return JsonResponse(response.json(), safe=False)
+            if response.status_code == 200:
+                return JsonResponse({'success': True, 'response': response.json()}, safe=False)
+            else:
+                return JsonResponse({'success': False, 'error': 'Error training model on FastAPI server'})
         else:
-            return JsonResponse({'success': False, 'error': 'Error training model on FastAPI server'})
-    else:
-        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+            return JsonResponse({'success': False, 'error': 'Invalid request method'})
+    except:
+        return JsonResponse({'success': False, 'response': {'error': 'Could not reach FastAPI'}})
 
 
 @csrf_exempt
@@ -141,7 +149,8 @@ def add_employee(request):
                             pincode=pincode)
         try:
             Employee.objects.get(pincode=pincode)
-            return JsonResponse({'error': 'Employee with the same pincode already exists'})
+            return JsonResponse(
+                {'success': False, 'response': {'error': 'Employee with the same pincode already exists'}})
         except:
             pass
         employee.save()
@@ -157,19 +166,13 @@ def get_employee(request):
         try:
             employee = Employee.objects.get(pincode=pincode)
             data = serializers.serialize('json', [employee])
-            return JsonResponse({'success': True, 'employee': data})
+            return JsonResponse({'success': True, 'response': {'employee': data}})
         except (Employee.DoesNotExist, ValueError, TypeError):
-            return JsonResponse({'success': False, 'error': 'Employee does not exist'})
+            return JsonResponse({'success': False, 'response': {'error': 'Employee does not exist'}})
     else:
-        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+        return JsonResponse({'success': False, 'response': {'error': 'Invalid request method'}})
 
 
-#
-# def list_employees(request):
-#     employees = Employee.objects.all()
-#     data = serializers.serialize('json', employees)
-#     formatted_data = json.dumps(json.loads(data), indent=4)
-#     return HttpResponse(formatted_data, content_type='application/json')
 @csrf_exempt
 def list_employees(request):
     name = request.POST.get('name')
@@ -197,17 +200,6 @@ def list_raw_attendance(request):
     data = serializers.serialize('json', attendance)
     formatted_data = json.dumps(json.loads(data), indent=4)
     return HttpResponse(formatted_data, content_type='application/json')
-
-
-#
-# def list_attendance(request):
-#     attendance = Attendance.objects.select_related('employee').values(
-#         'id', 'date',
-#         'employee__id', 'employee__name', 'employee__surname', 'employee__patronymic',
-#         'employee__pincode', 'employee__department'
-#     )
-#     attendance_list = list(attendance)
-#     return JsonResponse(attendance_list, safe=False)
 
 
 @csrf_exempt
@@ -246,7 +238,7 @@ def list_attendance(request):
     )
     attendance_list = list(attendance)
 
-    return JsonResponse(attendance_list, safe=False)
+    return JsonResponse({'success': True, 'response': attendance_list}, safe=False)
 
 
 @csrf_exempt
@@ -266,15 +258,15 @@ def delete_employee(request):
                 delete_images_data = json.loads(delete_images_response.content)
 
                 if not delete_images_data.get('success', False):
-                    return JsonResponse({'success': False, 'error': "Error deleting employee's images"})
+                    return JsonResponse({'success': False, 'response': {'error': "Error deleting employee's images"}})
 
             # Delete the employee
             employee.delete()
-            return JsonResponse({'success': True, 'deleted': pincode})
+            return JsonResponse({'success': True, 'response': {'deleted': pincode}})
         except (Employee.DoesNotExist, ValueError, TypeError):
-            return JsonResponse({'success': False, 'error': 'Employee does not exist'})
+            return JsonResponse({'success': False, 'response': {'error': 'Employee does not exist'}})
     else:
-        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+        return JsonResponse({'success': False, 'response': {'error': 'Invalid request method'}})
 
 
 @csrf_exempt
@@ -283,7 +275,7 @@ def edit_employee(request):
         employee_id = request.POST['employee_id']
         employee = Employee.objects.get(id=employee_id)
     except Employee.DoesNotExist:
-        return JsonResponse({'success': False, 'message': 'Employee not found'})
+        return JsonResponse({'success': False, 'response': {'message': 'Employee not found'}})
 
     if request.method == 'POST':
         name = request.POST['name']
@@ -302,7 +294,7 @@ def edit_employee(request):
         return JsonResponse({'success': True})
     else:
         data = serializers.serialize('json', [employee, ])
-        return JsonResponse({'employee': data})
+        return JsonResponse({'success': True, 'response': {'employee': data}})
 
 
 @csrf_exempt
@@ -328,30 +320,35 @@ def upload_images(request):
         response = requests.post(url, files=data)
 
         if response.status_code == 200:
-            return JsonResponse({'success': True, 'added images to': employee_id})
+            return JsonResponse({'success': True, 'response': {'added images to': employee_id}})
         else:
-            return JsonResponse({'success': False, 'error': 'Error uploading images to FastAPI server'})
+            return JsonResponse({'success': False, 'response': {'error': 'Error uploading images to FastAPI server'}})
 
     except Employee.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'Employee does not exist'})
+        return JsonResponse({'success': False, 'response': {'error': 'Employee does not exist'}})
 
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': f'An unexpected error occurred: {str(e)}'})
+    except:
+        return JsonResponse(
+            {'success': False,
+             'response': {'error': 'An unexpected error occurred, make sure target application is running'}})
 
 
 @csrf_exempt
 def delete_images(request, pincode=None):
     try:
         pincode = request.POST.get('pincode')
-        employee = Employee.objects.get(pincode=pincode)
+        try:
+            employee = Employee.objects.get(pincode=pincode)
+        except:
+            return JsonResponse({'success': False, 'response': {'error': 'Employee not found'}})
         employee_id = employee.id
         url = f'http://localhost:8000/delete_images/?id={employee_id}'
         response = requests.post(url)
         response_json = response.json()
         message = response_json.get('message')
-        return JsonResponse({'success': True, 'message': message})
+        return JsonResponse({'success': True, 'response': {'message': message}})
     except:
-        return JsonResponse({'success': False, 'error': 'Could not reach FastAPI server'})
+        return JsonResponse({'success': False, 'response': {'error': 'Could not reach FastAPI server'}})
 
 
 @csrf_exempt
@@ -370,13 +367,14 @@ def delete_files(request):
         response = requests.post(fastapi_url, data=json.dumps(payload))
 
         if response.status_code == 200:
-            return JsonResponse(response.json())
+            return JsonResponse({'success': True, 'response': response.json()})
         else:
-            return JsonResponse({'error': 'Could not delete files'})
+            return JsonResponse({'success': False, 'response': {'error': 'Could not delete files'}})
     except Employee.DoesNotExist:
-        return JsonResponse({'error': 'Employee not found'})
-    except Exception as e:
-        return JsonResponse({'error': f'An unexpected error occurred: {str(e)}'})
+        return JsonResponse({'success': False, 'response': {'error': 'Employee not found'}})
+    except:
+        return JsonResponse({'success': False, 'response': {
+            'error': 'An unexpected error occurred, make sure target application is running'}})
 
 
 @csrf_exempt
@@ -390,11 +388,11 @@ def has_images(request, pincode=None):
 
         if response.status_code == 200:
             has_images = response.json().get('has_images')
-            return JsonResponse({'has_images': has_images})
+            return JsonResponse({'success': True, 'response': {'has_images': has_images}})
         else:
-            return JsonResponse({'error': 'Could not check for images'})
+            return JsonResponse({'success': False, 'response': {'error': 'Could not check for images'}})
     except:
-        return JsonResponse({'error': 'Employee not found'})
+        return JsonResponse({'success': False, 'response': {'error': 'Employee not found'}})
 
 
 @csrf_exempt
@@ -425,15 +423,16 @@ def get_images(request):
                 })
 
             # Return the list of images as a JsonResponse
-            return JsonResponse(images, safe=False)
+            return JsonResponse({'success': True, 'response': images}, safe=False)
         else:
-            return JsonResponse({'error': 'Could not get images'})
+            return JsonResponse({'success': False, 'response': {'error': 'Could not get images'}})
 
     except Employee.DoesNotExist:
-        return JsonResponse({'error': 'Employee does not exist'})
+        return JsonResponse({'success': False, 'response': {'error': 'Employee does not exist'}})
 
-    except Exception as e:
-        return JsonResponse({'error': f'An unexpected error occurred: {str(e)}'})
+    except:
+        return JsonResponse({'success': False, 'response': {
+            'error': 'An unexpected error occurred, make sure target application is running'}})
 
 
 def has_attendance_recorded_today(employee_id):
@@ -466,13 +465,13 @@ def record_attendance(request, attendance_data=None):
     if request.method == 'POST' or attendance_data:
         employee_id = attendance_data['employee_id'] if attendance_data else request.POST.get('employee_id')
         if not employee_id:
-            return JsonResponse({'success': False, 'error': 'Employee ID is missing'})
+            return JsonResponse({'success': False, 'response': {'error': 'Employee ID is missing'}})
 
         # Check if the employee exists
         try:
             employee = Employee.objects.get(id=employee_id)
         except Employee.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'Employee does not exist'})
+            return JsonResponse({'success': False, 'response': {'error': 'Employee does not exist'}})
 
         # Get the current date and time
         now = timezone.now()
@@ -489,9 +488,9 @@ def record_attendance(request, attendance_data=None):
         # Update the employee_attendance_cache
         employee_attendance_cache[employee_id] = now.date()
         print(employee_attendance_cache)
-        return JsonResponse({'success': True, 'employee_id': employee_id, 'date': now.date()})
+        return JsonResponse({'success': True, 'response': {'employee_id': employee_id, 'date': now.date()}})
     else:
-        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+        return JsonResponse({'success': False, 'response': {'error': 'Invalid request method'}})
 
 
 @csrf_exempt
@@ -502,11 +501,11 @@ def get_attendance(request):
             employee = Employee.objects.get(id=employee_id)
             attendance_records = Attendance.objects.filter(employee=employee)
             data = serializers.serialize('json', attendance_records)
-            return JsonResponse({'success': True, 'attendance': data})
+            return JsonResponse({'success': True, 'response': {'attendance': data}})
         except (Employee.DoesNotExist, ValueError, TypeError):
-            return JsonResponse({'success': False, 'error': 'Employee does not exist'})
+            return JsonResponse({'success': False, 'response': {'error': 'Employee does not exist'}})
     else:
-        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+        return JsonResponse({'success': False, 'response': {'error': 'Invalid request method'}})
 
 
 @require_GET
@@ -525,13 +524,13 @@ def health_check(request):
     # Check the health of the PostgreSQL database
     try:
         cursor = connection.cursor()
-        cursor.execute('SELECT 1')
+        cursor.execute('SELECT version();')
         database_status = True
     except:
         database_status = False
 
-    return JsonResponse({
+    return JsonResponse({'success': True, 'response': {
         'django_status': django_status,
         'fastapi_status': fastapi_status,
-        'database_status': database_status,
-    })
+        'database_status': database_status, }
+                         })
