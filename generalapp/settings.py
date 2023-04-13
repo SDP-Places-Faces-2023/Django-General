@@ -26,12 +26,12 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 USE_TZ = False
 TIME_ZONE = 'UTC'
 
-DATA_UPLOAD_MAX_NUMBER_FILES = [200]
+DATA_UPLOAD_MAX_NUMBER_FILES = 200
 
 # Application definition
 
@@ -87,8 +87,8 @@ DATABASES = {
         'NAME': 'postgres',
         'USER': 'postgres',
         'PASSWORD': '12345',
-        'HOST': 'localhost',
-        'PORT': '9050'
+        'HOST': 'db',
+        'PORT': '5432',
     }
 }
 
