@@ -106,7 +106,7 @@ def get_frame(request):
 def training_status(request):
     try:
         if request.method == 'GET':
-            url = 'http://localhost:8000/training_status/'
+            url = 'http://fastapi:8000/training_status/'
             response = requests.get(url)
 
             if response.status_code == 200:
@@ -124,7 +124,7 @@ def training_status(request):
 def train_model(request):
     try:
         if request.method == 'POST':
-            url = 'http://localhost:8000/train_model/'
+            url = 'http://fastapi:8000/train_model/'
             response = requests.post(url)
 
             if response.status_code == 200:
@@ -309,7 +309,7 @@ def upload_images(request):
         images = request.FILES.getlist('images')
 
         # Build the request URL
-        url = f'http://localhost:8000/upload_images/?id={employee_id}'
+        url = f'http://fastapi:8000/upload_images/?id={employee_id}'
 
         # Build the request data
         data = []
@@ -342,7 +342,7 @@ def delete_images(request, pincode=None):
         except:
             return JsonResponse({'success': False, 'response': {'error': 'Employee not found'}})
         employee_id = employee.id
-        url = f'http://localhost:8000/delete_images/?id={employee_id}'
+        url = f'http://fastapi:8000/delete_images/?id={employee_id}'
         response = requests.post(url)
         response_json = response.json()
         message = response_json.get('message')
@@ -360,7 +360,7 @@ def delete_files(request):
         employee_id = employee.id
         str_id = f'{employee_id}'
         # FastAPI endpoint URL
-        fastapi_url = f"http://localhost:8000/delete_files/?id={str_id}"
+        fastapi_url = f"http://fastapi:8000/delete_files/?id={str_id}"
         print(str_id)
         # Send a POST request to the FastAPI endpoint with the filenames
         payload = filenames
@@ -383,7 +383,7 @@ def has_images(request, pincode=None):
         pincode = request.POST.get('pincode')
         employee = Employee.objects.get(pincode=pincode)
         employee_id = employee.id
-        url = f'http://localhost:8000/has_images/?id={employee_id}'
+        url = f'http://fastapi:8000/has_images/?id={employee_id}'
         response = requests.get(url)
 
         if response.status_code == 200:
@@ -405,7 +405,7 @@ def get_images(request):
         employee_id = employee.id
 
         # Build the request URL
-        url = f'http://localhost:8000/get_images/?id={employee_id}'
+        url = f'http://fastapi:8000/get_images/?id={employee_id}'
 
         # Send the request
         response = requests.get(url)
@@ -512,7 +512,7 @@ def get_attendance(request):
 def health_check(request):
     try:
         # Check the health of the FastAPI application
-        response = requests.get('http://localhost:8000/health')
+        response = requests.get('http://fastapi:8000/health')
         response.raise_for_status()
         fastapi_status = True
     except:

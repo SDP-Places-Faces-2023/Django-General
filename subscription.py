@@ -1,3 +1,4 @@
+import os
 import time
 import cv2
 import requests
@@ -5,20 +6,23 @@ import requests
 # Global flag to control the subscription loop
 is_running = False
 
+rtsp_url = os.environ.get("RTSP_URL", "0")
+
 
 def subscription_loop():
     global is_running
-    cap = cv2.VideoCapture(0)
-    url = 'http://127.0.0.1:9000/model_api_connection/frame_post/'
+    print(f"RTSP URL: {rtsp_url}")
+    cap = cv2.VideoCapture(rtsp_url)
+    url = 'http://backend:9000/model_api_connection/frame_post/'
 
     try:
         while is_running:
             ret, frame = cap.read()
-            key = cv2.waitKey(1) & 0xFF
-            cv2.imshow("current_frame", frame)
             if not ret:
                 continue
+            key = cv2.waitKey(1) & 0xFF
 
+            print("Frame captured")
             # Convert the frame to a byte stream
             data = cv2.imencode('.jpg', frame)[1].tobytes()
             # Send a POST request to the face detection API with the frame data
