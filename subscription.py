@@ -12,38 +12,48 @@ rtsp_url = os.environ.get("RTSP_URL", "0")
 def subscription_loop():
     global is_running
     print(f"RTSP URL: {rtsp_url}")
-    cap = cv2.VideoCapture(rtsp_url)
-    url = 'http://backend:9000/model_api_connection/frame_post/'
 
-    try:
-        while is_running:
-            ret, frame = cap.read()
-            if not ret:
-                continue
-            key = cv2.waitKey(1) & 0xFF
+    buffer_reset_interval = 2
+    last_reset_time = time.time()
 
-            print("Frame captured")
-            # Convert the frame to a byte stream
-            data = cv2.imencode('.jpg', frame)[1].tobytes()
-            # Send a POST request to the face detection API with the frame data
-            response = requests.post(url, files={"file": data})
+    while is_running:
+        cap = cv2.VideoCapture(rtsp_url)
+        url = 'http://backend:9000/model_api_connection/frame_post/'
 
-            if response.status_code == 200:
-                print("Frame sent successfully")
-            else:
-                print(f"Failed to retrieve data from Django: {response.status_code}")
+        try:
+            while is_running:
+                current_time = time.time()
+                if current_time - last_reset_time >= buffer_reset_interval:
+                    break
 
-            # Check for the window close event and exit the loop if the window is closed
-            if key == ord("q"):
-                break
+                ret, frame = cap.read()
+                if not ret:
+                    continue
 
-            # Control the rate at which frames are captured and sent to the API
-            time.sleep(0.05)
+                key = cv2.waitKey(1) & 0xFF
+                print("Frame captured")
 
-    finally:
-        # Release the camera and destroy the window
-        cap.release()
-        cv2.destroyAllWindows()
+                start_time = time.time()
+                data = cv2.imencode('.jpg', frame)[1].tobytes()
+                response = requests.post(url, files={"file": data})
+
+                if response.status_code == 200:
+                    print("Frame sent successfully")
+                else:
+                    print(f"Failed to retrieve data from Django: {response.status_code}")
+
+                end_time = time.time()
+                processing_time = end_time - start_time
+                sleep_duration = max(1 - processing_time, 0)
+                time.sleep(sleep_duration)
+
+                if key == ord("q"):
+                    break
+
+        finally:
+            cap.release()
+            last_reset_time = time.time()
+            cv2.destroyAllWindows()
 
 
 def start_subscription():

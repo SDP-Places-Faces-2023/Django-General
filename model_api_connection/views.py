@@ -3,6 +3,8 @@ import json
 import base64
 import requests
 import subscription
+import io
+from PIL import Image
 from model_api_connection.models import Employee, Attendance
 from django.core import serializers
 from django.db import connection
@@ -43,7 +45,7 @@ def frame_post(request):
     global last_recognized_data
     global current_frame_data
     if request.method == 'POST':
-        url = 'http://127.0.0.1:8000/detect_recognize/'
+        url = 'http://fastapi:8000/detect_recognize/'
         file_data = request.FILES['file'].read()
         files = {'file': file_data}
         current_frame_data = file_data
@@ -73,21 +75,27 @@ def frame_post(request):
     return JsonResponse({'success': False, 'response': {'error': 'Invalid request method'}}, status=400)
 
 
-@csrf_exempt
 def get_frame(request):
     global last_recognized_data
     global current_frame_data
 
+    def compress_image(image_data, format="JPEG", quality=50):
+        img = Image.open(io.BytesIO(image_data))
+        img.thumbnail((img.width // 2, img.height // 2), Image.ANTIALIAS)
+        output = io.BytesIO()
+        img.save(output, format=format, quality=quality)
+        return output.getvalue()
+
     if request.method == 'GET':
         if last_recognized_data:
-            # Convert the last recognized frame to a base64 string without any tags
-            last_frame_base64 = base64.b64encode(last_recognized_data['frame']).decode('utf-8').replace('\n', '')
-
-            # Get the recognition timestamp
+            # Compress the last recognized frame
+            compressed_last_frame = compress_image(last_recognized_data['frame'])
+            last_frame_base64 = base64.b64encode(compressed_last_frame).decode('utf-8').replace('\n', '')
             recognition_time = last_recognized_data['recognition_time']
 
-            # Convert the current frame data to a base64 string without any tags
-            current_frame_base64 = base64.b64encode(current_frame_data).decode('utf-8').replace('\n', '')
+            # Compress the current frame data
+            compressed_current_frame = compress_image(current_frame_data)
+            current_frame_base64 = base64.b64encode(compressed_current_frame).decode('utf-8').replace('\n', '')
 
             response_data = {
                 'last_recognized_frame': last_frame_base64,
@@ -96,10 +104,22 @@ def get_frame(request):
                 'timestamp': recognition_time
             }
             return JsonResponse({'success': True, 'response': response_data}, safe=False)
+
+        if not last_recognized_data and current_frame_data:
+            compressed_current_frame = compress_image(current_frame_data)
+            current_frame_base64 = base64.b64encode(compressed_current_frame).decode('utf-8').replace('\n', '')
+
+            response_data = {
+                'last_recognized_frame': current_frame_base64,
+                'last_employee_id': 'nnn',
+                'current_frame': current_frame_base64,
+                'timestamp': 'nnn'
+            }
+            return JsonResponse({'success': True, 'response': response_data}, safe=False)
         else:
             return JsonResponse({'success': False, 'response': {'error': 'No recognized frame available'}}, status=404)
-    else:
-        return JsonResponse({'success': False, 'response': {'error': 'Invalid request method'}}, status=400)
+
+    return JsonResponse({'success': False, 'response': {'error': 'Invalid request method'}}, status=400)
 
 
 @csrf_exempt
@@ -323,7 +343,6 @@ def upload_images(request):
             return JsonResponse({'success': True, 'response': {'added images to': employee_id}})
         else:
             return JsonResponse({'success': False, 'response': {'error': 'Error uploading images to FastAPI server'}})
-
     except Employee.DoesNotExist:
         return JsonResponse({'success': False, 'response': {'error': 'Employee does not exist'}})
 
