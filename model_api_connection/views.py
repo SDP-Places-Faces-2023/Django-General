@@ -1,19 +1,21 @@
-import datetime
-import json
 import base64
-import requests
-import subscription
+import datetime
 import io
+import json
+from datetime import date
+from threading import Thread
+
+import requests
 from PIL import Image
-from model_api_connection.models import Employee, Attendance
 from django.core import serializers
 from django.db import connection
 from django.http import JsonResponse, HttpResponse
+from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
-from django.utils import timezone
-from datetime import date
-from threading import Thread
+
+import subscription
+from model_api_connection.models import Employee, Attendance
 
 employee_attendance_cache = {}
 current_frame_data = {}
@@ -111,9 +113,9 @@ def get_frame(request):
 
             response_data = {
                 'last_recognized_frame': current_frame_base64,
-                'last_employee_id': 'nnn',
+                'last_employee_id': 'None',
                 'current_frame': current_frame_base64,
-                'timestamp': 'nnn'
+                'timestamp': 'None'
             }
             return JsonResponse({'success': True, 'response': response_data}, safe=False)
         else:

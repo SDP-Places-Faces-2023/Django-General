@@ -1,4 +1,5 @@
 from django.urls import path
+
 from .views import add_employee, delete_employee, upload_images, delete_images, record_attendance, list_employees, \
     list_attendance, list_raw_attendance, edit_employee, get_employee, get_attendance, get_images, has_images, \
     delete_files, frame_post, training_status, train_model, start_subscription, stop_subscription, \
