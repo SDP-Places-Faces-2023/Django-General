@@ -456,6 +456,53 @@ def get_images(request):
             'error': 'An unexpected error occurred, make sure target application is running'}})
 
 
+@csrf_exempt
+def get_unrecognized_folders(request):
+    url = 'http://fastapi:8000/get_unrecognized_folders/'
+
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        folders = response.json()
+        return JsonResponse({'success': True, 'response': folders}, safe=False)
+    else:
+        return JsonResponse({'success': False, 'response': {'error': 'Could not get folder names'}})
+
+
+@csrf_exempt
+def get_unrecognized_faces(request):
+    try:
+        # Get the date from the request parameters
+        date = request.GET.get('date')
+
+        # Build the request URL
+        url = f'http://fastapi:8000/get_unrecognized_faces/?date={date}'
+
+        # Send the request
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            # Parse the response as a dictionary of image filenames and their corresponding Base64-encoded strings
+            encoded_images = response.json()
+
+            # Build a list of dictionaries containing the filename and image data
+            images = []
+            for filename, data in encoded_images.items():
+                images.append({
+                    'filename': filename,
+                    'image': data,
+                })
+
+            # Return the list of images as a JsonResponse
+            return JsonResponse({'success': True, 'response': images}, safe=False)
+        else:
+            return JsonResponse({'success': False, 'response': {'error': 'Could not get images'}})
+
+    except:
+        return JsonResponse({'success': False, 'response': {
+            'error': 'An unexpected error occurred, make sure target application is running'}})
+
+
 def has_attendance_recorded_today(employee_id):
     global employee_attendance_cache
     now = timezone.now().date()

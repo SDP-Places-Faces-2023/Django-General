@@ -3,7 +3,7 @@ from django.urls import path
 from .views import add_employee, delete_employee, upload_images, delete_images, record_attendance, list_employees, \
     list_attendance, list_raw_attendance, edit_employee, get_employee, get_attendance, get_images, has_images, \
     delete_files, frame_post, training_status, train_model, start_subscription, stop_subscription, \
-    get_frame, health_check
+    get_frame, health_check, get_unrecognized_faces, get_unrecognized_folders
 
 urlpatterns = {
     path('frame_post/', frame_post, name='frame_post'),
@@ -21,6 +21,8 @@ urlpatterns = {
     path('edit_employee/', edit_employee, name='edit_employee'),
     path('upload_images/', upload_images, name='upload_images'),
     path('get_images/', get_images, name='get_images'),
+    path('get_unrecognized_faces/', get_unrecognized_faces, name='get_unrecognized_faces'),
+    path('get_unrecognized_folders/', get_unrecognized_folders, name='get_unrecognized_folders'),
     path('has_images/', has_images, name='has_images'),
     path('delete_images/', delete_images, name='delete_images'),
     path('delete_files/', delete_files, name='delete_files'),
