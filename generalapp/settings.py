@@ -21,17 +21,23 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-28zxac_oo-6ck(gmi@rf_2j-)&x+ppzr7l5%yrnw^-2yg0fjg@'
 
+# CORS settings
+CORS_ALLOW_ALL_ORIGINS = True
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
-USE_TZ = True
+USE_TZ = False
 TIME_ZONE = 'UTC'
+
+DATA_UPLOAD_MAX_NUMBER_FILES = 200
 
 # Application definition
 
 INSTALLED_APPS = [
     'django.contrib.admin',
+    'corsheaders',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -43,6 +49,8 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -79,8 +87,8 @@ DATABASES = {
         'NAME': 'postgres',
         'USER': 'postgres',
         'PASSWORD': '12345',
-        'HOST': 'localhost',
-        'PORT': '9050'
+        'HOST': 'db',
+        'PORT': '5432',
     }
 }
 
