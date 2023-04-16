@@ -470,6 +470,22 @@ def get_unrecognized_folders(request):
 
 
 @csrf_exempt
+def delete_unrecognized_images(request):
+    try:
+        date = request.GET.get('date')
+        url = f'http://fastapi:8000/delete_unrecognized_images/?date={date}'
+        response = requests.get(url)
+        data = response.json()
+        if response.status_code == 200 and data.get("success"):
+            return JsonResponse({'success': True, 'response': data})
+        else:
+            return JsonResponse(
+                {'success': False, 'response': {'error': data.get("message", "Unknown error occurred")}})
+    except:
+        return JsonResponse({'success': False, 'response': {'error': 'Could not reach FastAPI server'}})
+
+
+@csrf_exempt
 def get_unrecognized_faces(request):
     try:
         # Get the date from the request parameters
