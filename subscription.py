@@ -25,15 +25,11 @@ def subscription_loop():
         if ret:
             break
         print("Waiting for RTSP connection...")
-        time.sleep(1)
+        time.sleep(0.05)
 
     try:
         while is_running:
-            current_time = time.time()
-            if current_time - last_reset_time >= buffer_reset_interval:
-                last_reset_time = current_time
-                cap.release()
-                cap = cv2.VideoCapture(rtsp_url)
+            cap = cv2.VideoCapture(rtsp_url)
             ret, frame = cap.read()
             if not ret:
                 continue
@@ -52,7 +48,7 @@ def subscription_loop():
 
             end_time = time.time()
             processing_time = end_time - start_time
-            sleep_duration = max(1 - processing_time, 0)
+            sleep_duration = 0.05
             time.sleep(sleep_duration)
 
             if key == ord("q"):
