@@ -13,13 +13,25 @@ from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
-
+from concurrent.futures import ThreadPoolExecutor
 import subscription
 from model_api_connection.models import Employee, Attendance
 
 employee_attendance_cache = {}
 current_frame_data = {}
 last_recognized_data = None
+
+executor = ThreadPoolExecutor(max_workers=1)
+
+fastapi_response_cache = {}
+
+
+def fetch_fastapi_response(url, files):
+    response = requests.post(url, files=files)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        return None
 
 
 @csrf_exempt
@@ -51,29 +63,37 @@ def frame_post(request):
         file_data = request.FILES['file'].read()
         files = {'file': file_data}
         current_frame_data = file_data
-        response = requests.post(url, files=files)
-        if response.status_code == 200:
-            data = response.json()
-            print(data)
-            if 'recognition_results' in data and 'predicted_face' in data['recognition_results']:
-                employee_id = data['recognition_results']['predicted_face']
 
-                if not has_attendance_recorded_today(employee_id):
-                    attendance_data = {'employee_id': employee_id}
-                    attendance_response = record_attendance(request, attendance_data)
-                    attendance_response_json = json.loads(attendance_response.content)
-                    data.update(attendance_response_json)
-                recognition_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                last_recognized_data = {
-                    'frame': file_data,
-                    'employee_id': employee_id,
-                    'recognition_time': recognition_time
-                }
-
-            return JsonResponse({'success': True, 'response': data}, safe=False)
+        file_data_hash = hash(file_data)
+        if file_data_hash in fastapi_response_cache:
+            data = fastapi_response_cache[file_data_hash]
         else:
-            return JsonResponse({'success': False, 'response': {'error': 'Failed to retrieve data from FastAPI'}},
-                                status=500)
+            future = executor.submit(fetch_fastapi_response, url, files)
+            data = future.result()
+
+            if data is not None:
+                fastapi_response_cache[file_data_hash] = data
+            else:
+                return JsonResponse({'success': False, 'response': {'error': 'Failed to retrieve data from FastAPI'}},
+                                    status=500)
+
+        # Process the data obtained from FastAPI
+        if 'recognition_results' in data and 'predicted_face' in data['recognition_results']:
+            employee_id = data['recognition_results']['predicted_face']
+
+            if not has_attendance_recorded_today(employee_id):
+                attendance_data = {'employee_id': employee_id}
+                attendance_response = record_attendance(request, attendance_data)
+                attendance_response_json = json.loads(attendance_response.content)
+                data.update(attendance_response_json)
+            recognition_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            last_recognized_data = {
+                'frame': file_data,
+                'employee_id': employee_id,
+                'recognition_time': recognition_time
+            }
+
+        return JsonResponse({'success': True, 'response': data}, safe=False)
     return JsonResponse({'success': False, 'response': {'error': 'Invalid request method'}}, status=400)
 
 
@@ -81,7 +101,7 @@ def get_frame(request):
     global last_recognized_data
     global current_frame_data
 
-    def compress_image(image_data, format="JPEG", quality=50):
+    def compress_image(image_data, format="WEBP", quality=20):
         img = Image.open(io.BytesIO(image_data))
         img.thumbnail((img.width // 2, img.height // 2), Image.ANTIALIAS)
         output = io.BytesIO()
