@@ -107,7 +107,7 @@ def subscription_loop():
     global is_running
     print(f"RTSP URL: {rtsp_url}")
 
-    buffer_reset_interval = 1
+    buffer_reset_interval = 3
     last_reset_time = time.time()
 
     cap = cv2.VideoCapture(rtsp_url)
